@@ -3,19 +3,16 @@ package gui;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Graphics;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class WindowPaper extends JFrame {
-	
-	private JPanel contentPane;
+public class WindowPaper extends JPanel {
 	
 	public WindowPaper(int screenWidth, int screenHeight) {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(0, 0, screenWidth, screenHeight);
+		/*
 		contentPane = new JPanel();
 		contentPane.setBackground(Color.WHITE);
-		setContentPane(contentPane);
+		add(contentPane);
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -26,7 +23,14 @@ public class WindowPaper extends JFrame {
 					e.printStackTrace();
 				}
 			}
-		});
+		});*/
+	}
+	
+	public void init() {
+		//frame = new JFrame();
+		
+		
+		
 	}
 	
 	public void paint(Graphics g){

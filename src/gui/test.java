@@ -3,6 +3,15 @@ package gui;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.SwingConstants;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JMenuBar;
 
 public class test {
 
@@ -36,8 +45,7 @@ public class test {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 450, 300);
+		frame.setBounds(0, 0, 1280, 720);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
-
 }
