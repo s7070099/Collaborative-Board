@@ -67,6 +67,15 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 				g.drawLine(pointData.get(i).x, pointData.get(i).y, pointData.get(i+1).x, pointData.get(i+1).y);
 			}
 		}
+		
+		for(int i=0; i<lineData.size(); i++){
+			ArrayList<Point> tmpline = lineData.get(i).data;
+			for(int j=0; j<tmpline.size()-1; j++){
+				Point tmppoint = tmpline.get(j);
+				Point tmppoint2 = tmpline.get(j+1);
+				g.drawLine(tmppoint.x, tmppoint.y, tmppoint2.x, tmppoint2.y);
+			}
+		}
 	}
 	
 	public void active() {
@@ -124,26 +133,27 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 		mouseY = e.getY();
 		repaint();*/
 	}
-
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		// TODO Auto-generated method stub
+	
+	public void updateMousePosition(MouseEvent e){
 		mouseX = e.getX();
 		mouseY = e.getY();
 		System.out.println(mouseX + " " + mouseY + " " + penRecord);
-		
-		if(penRecord == true){
-			pointData.add(new Point(mouseX, mouseY, 0.5f));
-		}
-		
 		repaint();
 	}
 
 	@Override
+	public void mouseDragged(MouseEvent e) {
+		// TODO Auto-generated method stub
+		updateMousePosition(e);
+		
+		if(penRecord == true){
+			pointData.add(new Point(mouseX, mouseY, 0.5f));
+		}
+	}
+
+	@Override
 	public void mouseMoved(MouseEvent e) {
-		mouseX = e.getX();
-		mouseY = e.getY();
-		System.out.println(mouseX + " " + mouseY + " " + penRecord);
+		updateMousePosition(e);
 	}
 
 }
