@@ -35,10 +35,11 @@ public class Window extends JFrame {
 		//g.setColor(Color.BLUE);
 		//g.fillRect(50,50,50,50);
 		
-		g.drawString("I love you", 50, 50);
+		//g.drawString("Mouse X: " + windowPaper.mouseX, 50, 50);
+		//g.drawString("Mouse Y: " + windowPaper.mouseY, 50, 70);
 		
 		//g.setFont(new Font("TimesRoman", Font.PLAIN, fontSize)); 
-		g.drawLine(0, 0, 100, 100);
+		//g.drawLine(0, 0, 100, 100);
 	}
 	
 }
