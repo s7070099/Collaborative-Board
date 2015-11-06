@@ -2,14 +2,13 @@ package gui;
 
 import java.awt.EventQueue;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 public class Window extends JFrame {
 
 	private int screenWidth;
 	private int screenHeight;
 	
-	private WindowPaper windowPaper;
+	public static WindowPaper windowPaper;
 	
 	public Window(String Caption, int screenWidth, int screenHeight) {
 		this.screenWidth = screenWidth;
@@ -21,6 +20,8 @@ public class Window extends JFrame {
 		setVisible(true);
 		
 		windowPaper = new WindowPaper(screenWidth, screenHeight);
+		add(windowPaper);
+		
 	}
 	
 }

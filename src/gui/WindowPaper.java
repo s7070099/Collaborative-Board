@@ -9,21 +9,8 @@ public class WindowPaper extends JPanel {
 	
 	public WindowPaper(int screenWidth, int screenHeight) {
 		setBounds(0, 0, screenWidth, screenHeight);
-		/*
-		contentPane = new JPanel();
-		contentPane.setBackground(Color.WHITE);
-		add(contentPane);
-		
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					WindowPaperTool frame = new WindowPaperTool();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});*/
+		setBackground(Color.RED);
+		setVisible(true);
 	}
 	
 	public void init() {

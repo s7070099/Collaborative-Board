@@ -14,7 +14,7 @@ public class CollaborativeBoard {
 		
 		new gui.Window(AppName + " " + AppVersion, 1280, 720);
 		new network.Client("127.0.0.1", 7777);
-
+		new Console().start();
 	}
 
 }
