@@ -31,12 +31,12 @@ import java.awt.Point;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class WindowPaperTool extends JFrame {
+public class WindowDrawTool extends JFrame {
 	
 	private JPanel contentPanel;
 	private JPanel contentPanel2;
 	
-	public WindowPaperTool() {
+	public WindowDrawTool() {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(0, 0, 200, 200);
 		setUndecorated(true);

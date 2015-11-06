@@ -6,8 +6,8 @@ public class Line {
 
 	public ArrayList<Point> data;
 	
-	public Line(){
-		this.data = new ArrayList<Point>();
+	public Line(ArrayList<Point> data){
+		this.data = data;
 	}
 	
 }

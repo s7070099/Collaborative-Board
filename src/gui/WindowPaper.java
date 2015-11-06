@@ -2,14 +2,17 @@ package gui;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
 
 import javax.swing.JPanel;
+
+import core.*;
 
 public class WindowPaper extends JPanel implements KeyListener, MouseListener, MouseMotionListener {
 	
@@ -17,16 +20,22 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 	public float cameraY = 0;
 	public float cameraZoom = 0;
 	
-	public double mouseX = 0;
-	public double mouseY = 0;
+	public int mouseX = 0;
+	public int mouseY = 0;
+	
+	public boolean penRecord = false;
+	public float penSize = 0.5f;
+	public Color penColor = Color.BLACK;
 	
 	public Point point;
+	public Line line;
+	public Layer layer;
 	
-	public core.Layer layer;
+	public ArrayList<Point> pointData;
+	public ArrayList<Line> lineData = new ArrayList<Line>();
+	public ArrayList<Layer> layerData;
 	
 	public boolean active = false;
-	
-	public Graphics old;
 	
 	public WindowPaper(int screenWidth, int screenHeight) {
 		//setting
@@ -52,7 +61,12 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 		g.drawString("Mouse X: " + mouseX, 30, 50);
 		g.drawString("Mouse Y: " + mouseY, 30, 70);
 		
-		
+		if(penRecord == true){
+			//System.out.println("Drawing..");
+			for(int i=0; i<pointData.size()-1; i++){
+				g.drawLine(pointData.get(i).x, pointData.get(i).y, pointData.get(i+1).x, pointData.get(i+1).y);
+			}
+		}
 	}
 	
 	public void active() {
@@ -82,14 +96,16 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
+		pointData = new ArrayList<Point>();
+		penRecord = true;
+		System.out.println("Started " + penRecord);
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
+		lineData.add(new Line(pointData));
+		penRecord = false;
+		System.out.println("Ended " + penRecord);
 	}
 
 	@Override
@@ -112,14 +128,22 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// TODO Auto-generated method stub
+		mouseX = e.getX();
+		mouseY = e.getY();
+		System.out.println(mouseX + " " + mouseY + " " + penRecord);
 		
+		if(penRecord == true){
+			pointData.add(new Point(mouseX, mouseY, 0.5f));
+		}
+		
+		repaint();
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		mouseX = e.getX();
 		mouseY = e.getY();
-		repaint();
+		System.out.println(mouseX + " " + mouseY + " " + penRecord);
 	}
 
 }
