@@ -1,7 +1,10 @@
 package gui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -73,7 +76,12 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 			for(int j=0; j<tmpline.size()-1; j++){
 				Point tmppoint = tmpline.get(j);
 				Point tmppoint2 = tmpline.get(j+1);
-				g.drawLine(tmppoint.x, tmppoint.y, tmppoint2.x, tmppoint2.y);
+				
+				Graphics2D g2d = (Graphics2D) g.create();
+				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				g2d.drawLine(tmppoint.x, tmppoint.y, tmppoint2.x, tmppoint2.y);
+				g2d.dispose();
 			}
 		}
 	}
@@ -137,7 +145,7 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 	public void updateMousePosition(MouseEvent e){
 		mouseX = e.getX();
 		mouseY = e.getY();
-		System.out.println(mouseX + " " + mouseY + " " + penRecord);
+		//System.out.println(mouseX + " " + mouseY + " " + penRecord);
 		repaint();
 	}
 
