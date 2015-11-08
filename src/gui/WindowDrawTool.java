@@ -30,29 +30,41 @@ import java.awt.Point;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JTextField;
 
-public class WindowDrawTool extends JFrame {
-	
-	private JPanel contentPanel;
-	private JPanel contentPanel2;
+public class WindowDrawTool extends JPanel {
+	private JTextField textField;
 	
 	public WindowDrawTool() {
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(0, 0, 200, 200);
-		setUndecorated(true);
+		setBounds(0, 0, 40, 300);
+		setOpaque(false);
+		setBackground(Color.BLACK);
+		
+		textField = new JTextField();
+		add(textField);
+		textField.setColumns(10);
+		
+		JButton btnNewButton = new JButton("New button");
+		add(btnNewButton);
+		setVisible(true);
+		//setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
+		/*setUndecorated(true);
 		contentPanel = new JPanel();
 		contentPanel.setBackground(Color.WHITE);
 		contentPanel2 = new JPanel();
 		contentPanel2.setBackground(Color.BLACK);
 		setContentPane(contentPanel);
-		setContentPane(contentPanel2);
+		setContentPane(contentPanel2);*/
 		
-		Point point = super.getLocation();
-		setLocation(point.x, point.y);
+		/*Point point = super.getLocation();
+		setLocation(point.x, point.y);*/
 		
 	}
 	
 	public void paint(Graphics g){
+		super.paint(g);
 		g.setColor(Color.BLUE);
 		g.fillRect(50,50,50,50);
 	}

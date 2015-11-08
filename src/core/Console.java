@@ -15,10 +15,10 @@ class Console extends Thread {
 		   if(input.next().equals("/show")){
 			   if(input.next().equals("paper")){
 				   if(input.next().equals("1")){
-					   gui.Window.windowPaper.setVisible(true);
+					   gui.Window.windowMain.setVisible(true);
 					   continue;
 				   }else{
-					   gui.Window.windowPaper.setVisible(false);
+					   gui.Window.windowMain.setVisible(false);
 					   continue;
 				   }
 			   }
