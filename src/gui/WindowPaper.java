@@ -4,6 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -53,7 +54,7 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
         addMouseMotionListener(this);
         setFocusable(true);
 	}
-
+	
 	public void paint(Graphics g){
 		super.paint(g);
 		//g.setColor(Color.WHITE);
@@ -73,16 +74,34 @@ public class WindowPaper extends JPanel implements KeyListener, MouseListener, M
 		
 		for(int i=0; i<lineData.size(); i++){
 			ArrayList<Point> tmpline = lineData.get(i).data;
+			/*
 			for(int j=0; j<tmpline.size()-1; j++){
 				Point tmppoint = tmpline.get(j);
 				Point tmppoint2 = tmpline.get(j+1);
 				
-				Graphics2D g2d = (Graphics2D) g.create();
+				g2d = (Graphics2D) g.create();
 				g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 				g2d.drawLine(tmppoint.x, tmppoint.y, tmppoint2.x, tmppoint2.y);
 				g2d.dispose();
+				
+				
+				
 			}
+			*/
+			int xPoly[] = new int[tmpline.size()];
+			int yPoly[] = new int[tmpline.size()];
+			for(int j=0; j<tmpline.size(); j++){
+				xPoly[j] = tmpline.get(j).x;
+				yPoly[j] = tmpline.get(j).y;
+				//System.out.println(xPoly[j] + " " + yPoly[j]);
+			}
+			
+			Graphics2D g2d = (Graphics2D) g.create();
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g2d.drawPolyline(xPoly, yPoly, xPoly.length);
+			g2d.dispose();
 		}
 	}
 	
