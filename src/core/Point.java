@@ -11,5 +11,4 @@ public class Point {
 		this.x = x;
 		this.y = y;
 	}
-	
 }

@@ -4,11 +4,12 @@ import javax.swing.JFrame;
 
 public class CollaborativeBoard {
 	
-	private static String AppName = "Collaborative Board";
-	private static String AppVersion = "1.0.0";
+	public static String AppName = "Collaborative Board";
+	public static String AppVersion = "1.0.0";
 	
-	private static String ServerIPDefault = "127.0.0.1";
-	private static int ServerPortDefault = 7777;
+	public static String Nickname = "nickname";
+	public static String ServerIPDefault = "127.0.0.1";
+	public static int ServerPortDefault = 7777;
 	
 	public static void main(String[] args) {
 		

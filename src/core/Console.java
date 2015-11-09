@@ -15,16 +15,29 @@ class Console extends Thread {
 		   
 		   if(input.next().equals("/load")){
 			   String filename = input.next();
-			   //load
-			   System.out.println("Load");
+			   
+			   //enter code here to load
+			   //gui.Window.windowMain.layerList = paper.data;
+			   System.out.println("Load " + filename);
 		   }
 		   
 		   if(input.next().equals("/save")){
 			   String filename = input.next();
-			   //save
-			   System.out.println("Save");
+			   
+			   Paper paper = new Paper("Test Paper", "Admin");
+			   paper.data = gui.Window.windowMain.layerList;
+			   //enter code here to save
+			   System.out.println("Save " + filename);
 		   }
-		   //อันนี้เป็นคอลโซล ไว้ ดีบัก
+		   
+		   if(input.next().equals("/debug")){
+			   //System.out.println(gui.Window.windowMain.buffer);
+		   }
+		   
+		   if(input.next().equals("/tool")){
+			   gui.Window.windowMain.tool = input.nextInt();
+		   }
+
 		   if(input.next().equals("/show")){
 			   if(input.next().equals("paper")){
 				   if(input.next().equals("1")){

@@ -15,6 +15,7 @@ public class Layer {
 		this.author = author;
 		this.hidden = false;
 		this.data = new ArrayList<Line>();
+		this.user = new ArrayList<String>();
 	}
 	
 	public void addUser(String user){

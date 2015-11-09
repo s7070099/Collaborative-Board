@@ -13,6 +13,7 @@ public class Paper {
 		this.name = name;
 		this.author = author;
 		this.data = new ArrayList<Layer>();
+		this.user = new ArrayList<String>();
 	}
 	
 	public void addUser(String user){
