@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.TexturePaint;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -43,12 +44,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	public ArrayList<Layer> layerData;
 	
 	public boolean active = false;
-	
-	Graphics old;
-	Graphics update;
-	
 	BufferedImage buffer;
-	Graphics2D g2d;
 	
 	public WindowMain(int screenWidth, int screenHeight) {
 		setBounds(0, 0, screenWidth, screenHeight);
@@ -62,7 +58,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
         setFocusable(true);
         
         buffer = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_ARGB);
-        g2d = buffer.createGraphics();
+        Graphics2D g2d = buffer.createGraphics();
 
 		Color transparent = new Color(0, 0, 0, 0);
 		g2d.setColor(transparent);
@@ -74,7 +70,27 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		
 	}
 	
-	public void drawLayer(Graphics g, Line lineData){
+	public void applyLine(BufferedImage buffer, Line lineData){
+		Line tmpline = lineData;
+		ArrayList<Point> tmpdata = lineData.data;
+		
+		int xPoly[] = new int[tmpdata.size()];
+		int yPoly[] = new int[tmpdata.size()];
+		for(int j=0; j<tmpdata.size(); j++){
+			xPoly[j] = tmpdata.get(j).x;
+			yPoly[j] = tmpdata.get(j).y;
+		}
+		
+		Graphics2D g2d = buffer.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2d.setStroke(new BasicStroke(tmpline.size, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g2d.setColor(new Color(tmpline.color.getRed(), tmpline.color.getGreen(), tmpline.color.getBlue(), 255));
+		g2d.drawPolyline(xPoly, yPoly, xPoly.length);
+		g2d.dispose();
+	}
+	
+	public void getLine(Graphics g, Line lineData){
 		Line tmpline = lineData;
 		ArrayList<Point> tmpdata = lineData.data;
 		
@@ -86,21 +102,50 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		}
 		
 		Graphics2D g2d = (Graphics2D) g.create();
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g2d.setStroke(new BasicStroke(tmpline.size, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g2d.setColor(tmpline.color);
 		g2d.drawPolyline(xPoly, yPoly, xPoly.length);
-		g2d.dispose();/*
-		g2d = buffer.createGraphics();
+		g2d.dispose();
+	}
+	
+	/*
+	public void getLine(Graphics g, Line lineData){
+		Line tmpline = lineData;
+		ArrayList<Point> tmpdata = lineData.data;
+		
+		int xPoly[] = new int[tmpdata.size()];
+		int yPoly[] = new int[tmpdata.size()];
+		for(int j=0; j<tmpdata.size(); j++){
+			xPoly[j] = tmpdata.get(j).x;
+			yPoly[j] = tmpdata.get(j).y;
+		}
+		
+		Graphics2D g2d = (Graphics2D) g.create();
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2d.setStroke(new BasicStroke(tmpline.size, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g2d.setColor(tmpline.color);
+		g2d.drawPolyline(xPoly, yPoly, xPoly.length);
+		g2d.dispose();
+	
+		g2d = buffer.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		g2d.setStroke(new BasicStroke(tmpline.size, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g2d.setColor(new Color(tmpline.color.getRed(), tmpline.color.getGreen(), tmpline.color.getBlue(), 255));
 		g2d.drawPolyline(xPoly, yPoly, xPoly.length);
-		g2d.dispose();*/
+		g2d.dispose();
 	}
+	*/
 
 	public void paint(Graphics g){
 		super.paint(g);
+		
 		
 		Graphics2D g2d2 = (Graphics2D) g;
 		g2d2.drawImage(buffer, 0, 0, null);
@@ -109,8 +154,22 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g.drawString("Mouse Y: " + mouseY, 30, 70);
 		
 		if(penRecord == true){
-			drawLayer(g, new Line(pointData, toolSize, toolColor));
+			getLine(g, new Line(pointData, toolSize, toolColor));
 		}
+		//g2d2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		//g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		/*g2d2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g2d2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);*/
+		
+		//float scale = 0.7f;
+		//g2d.drawImage(buffer, (int)(buffer.getWidth()*scale/2), (int)(buffer.getHeight()*scale/2), buffer.getWidth()*scale, buffer.getHeight()*scale, null);
+		//g2d2.dispose();
+		
+
+		
+		
+		
 		
 		/*for(int i=0; i<lineData.size(); i++){
 			Line tmpline = lineData.get(i);
@@ -218,8 +277,11 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		lineData.add(new Line(pointData, toolSize, toolColor));
+		Line line = new Line(pointData, toolSize, toolColor);
+		lineData.add(line);
 		penRecord = false;
+		
+		applyLine(buffer, line);
 		System.out.println("Ended " + penRecord);
 	}
 
