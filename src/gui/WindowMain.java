@@ -42,6 +42,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	public ArrayList<Point> pointData;
 	public ArrayList<Line> lineData = new ArrayList<Line>();
 	public ArrayList<Layer> layerData;
+	public ArrayList<BufferedImage> layerBuffer;
 	
 	public boolean active = false;
 	BufferedImage buffer;
@@ -146,7 +147,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	public void paint(Graphics g){
 		super.paint(g);
 		
-		
 		Graphics2D g2d2 = (Graphics2D) g;
 		g2d2.drawImage(buffer, 0, 0, null);
 		
@@ -156,6 +156,8 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		if(penRecord == true){
 			getLine(g, new Line(pointData, toolSize, toolColor));
 		}
+		
+		
 		//g2d2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		//g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		/*g2d2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
