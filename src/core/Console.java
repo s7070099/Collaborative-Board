@@ -1,7 +1,11 @@
 package core;
 
+import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,10 +27,61 @@ class Console extends Thread {
 			   
 			   //enter code here to load
 			   //gui.Window.windowMain.layerList = paper.data;
-			   System.out.println("Load " + filename);
+			   File file1 = new File(filename);
+			   FileReader fReader;
+			try {
+				fReader = new FileReader(file1);
+				BufferedReader bufReader = new BufferedReader(fReader);
+				System.out.println("Load " + filename);
+			   
+				
+				String paper_name = bufReader.readLine(); //1.Paper name
+				String paper_author = bufReader.readLine();//2.Author name
+				Paper paper = new Paper(paper_name,paper_author);
+				int user_qty = Integer.parseInt(bufReader.readLine());
+				for(int i=0;i<user_qty;i++){
+					paper.addUser(bufReader.readLine());
+				}
+				
+				int layer_qty = Integer.parseInt(bufReader.readLine());
+				
+				for(int i=0;i<layer_qty;i++){
+					String layer_name = bufReader.readLine();
+					String layer_author = bufReader.readLine();
+					Layer layer = new Layer(layer_name,layer_author);
+					layer.hidden = Boolean.parseBoolean(bufReader.readLine());
+					int user_number = Integer.parseInt(bufReader.readLine());
+					for(int j=0;j<user_number;j++){
+						layer.addUser(bufReader.readLine());
+					}
+					int line_qty = Integer.parseInt(bufReader.readLine());
+					for(int j=0;j<line_qty;j++){
+						float size = Float.parseFloat(bufReader.readLine());
+						int r = Integer.parseInt(bufReader.readLine());
+						int g = Integer.parseInt(bufReader.readLine());
+						int b = Integer.parseInt(bufReader.readLine());
+						
+						int point_qty = Integer.parseInt(bufReader.readLine());
+						ArrayList<Point> tuple = new ArrayList(); 
+						for(int k=0;k<point_qty;k++){
+							int x = Integer.parseInt(bufReader.readLine());
+							int y = Integer.parseInt(bufReader.readLine());
+							tuple.add(new Point(x,y));
+						}
+						Line line = new Line(tuple, size, new Color(r,g,b));
+						layer.data.add(line);
+					}
+					paper.data.add(layer);
+				}
+				
+				bufReader.close();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		   }
-		   
 		   if(input.next().equals("/save")){
+			   
 			   String filename = input.next();
 			   
 			   Paper paper = new Paper("Test Paper", "Admin");
@@ -34,6 +89,7 @@ class Console extends Thread {
 			   paper.user.add("Mark");
 			   paper.user.add("Jimmy");
 			   paper.user.add("Guide");
+			   paper.user.add("KuayGuide");
 			   
 			   File file = new File(filename);
 			   FileWriter fileWriter;
@@ -65,7 +121,7 @@ class Console extends Thread {
 						   buffer.write(j);
 						   buffer.newLine();
 					   }
-					   buffer.write(i.user.size()+"");
+					   buffer.write(i.data.size()+"");
 					   buffer.newLine();
 					   for(Line j:i.data){
 						   buffer.write(j.size+"");
