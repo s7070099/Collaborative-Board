@@ -102,6 +102,9 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
         /*JButton button = new JButton("Click Me");
         button.setBounds(5, 5, 50, 30);
         add(button);*/
+        layerList.get(0).user.add("FakeUser1");
+        layerList.get(0).user.add("FakeUser2");
+        layerList.get(0).user.add("FakeUser3");
 	}
 	
 	public int addLayer(String name, String author){

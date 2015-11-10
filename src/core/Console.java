@@ -51,17 +51,41 @@ class Console extends Thread {
 					   buffer.newLine();
 				   }
 				   buffer.write(paper.data.size()+"");
+				   buffer.newLine();
 				   for(Layer i:paper.data){
 					   buffer.write(i.name);
+					   buffer.newLine();
 					   buffer.write(i.author);
+					   buffer.newLine();
 					   buffer.write(i.hidden+"");
+					   buffer.newLine();
 					   buffer.write(i.user.size()+"");
-					   for(String j:paper.user){
+					   buffer.newLine();
+					   for(String j:i.user){
 						   buffer.write(j);
 						   buffer.newLine();
 					   }
+					   buffer.write(i.user.size()+"");
+					   buffer.newLine();
+					   for(Line j:i.data){
+						   buffer.write(j.size+"");
+						   buffer.newLine();
+						   buffer.write(j.color.getRed()+"");
+						   buffer.newLine();
+						   buffer.write(j.color.getGreen()+"");
+						   buffer.newLine();
+						   buffer.write(j.color.getBlue()+"");
+						   buffer.newLine();
+						   buffer.write(j.data.size()+"");
+						   buffer.newLine();
+						   for(Point k:j.data){
+							   buffer.write(k.x+"");
+							   buffer.newLine();
+							   buffer.write(k.y+"");
+							   buffer.newLine();
+						   }
+					   }
 				   }
-				   
 				   /*
 				  		public String name;
 						public String author;
