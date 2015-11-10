@@ -93,14 +93,13 @@ class Console extends Thread {
 						public ArrayList<String> user;
 						public ArrayList<Line> data;
 				    */
-				   System.out.println(paper.user.size());
 				   buffer.close();
+				   System.out.println("Save " + filename);
 			   } catch (IOException e) {
 				   e.printStackTrace();
 				   System.out.println("Cannot call file writer!");
 			   } 
 			   //enter code here to save
-			   System.out.println("Save " + filename);
 		   }
 		   
 		   if(input.next().equals("/debug")){

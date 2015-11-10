@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.TexturePaint;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -28,10 +29,12 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	public int screenWidth = 1000;
 	public int screenHeight = 1000;
 	
-	public float cameraX = 0;
-	public float cameraY = 0;
-	public float cameraZoom = 0;
+	public double cameraX = 0;
+	public double cameraY = 0;
+	public double cameraZoom = 0;
 	
+	public int mousePressX = 0;
+	public int mousePressY = 0;
 	public int mouseX = 0;
 	public int mouseY = 0;
 	
@@ -179,12 +182,17 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			refresh = false;
 		}
 		
+		int offsetX = (int)cameraX;
+		int offsetY = (int)cameraY;
+		int sizeX = (int)4096;
+		int sizeY = (int)4096;
 		for(int i=0; i<layerBuffer.size(); i++){
-			g.drawImage(layerBuffer.get(i), 0, 0, null);
-		}
-		
-		if(penRecord == true){
-			getLine(g, new Line(pointList, toolSize, toolColor));
+			g.drawImage(layerBuffer.get(i), offsetX, offsetY, sizeX, sizeY, null);
+			if(i == index){
+				if(penRecord == true){
+					getLine(g, new Line(pointList, toolSize, toolColor));
+				}
+			}
 		}
 		
 		panelToolPosition = (screenHeight/2) - ((buttonToolCount * 64)/2);
@@ -200,12 +208,20 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g.drawOval(mouseX, mouseY, (int)toolSize, (int)toolSize);
 	}
 	
+	public boolean mouseLeft(MouseEvent e){
+		return e.getModifiers() == InputEvent.BUTTON1_MASK;
+	}
+	
 	public boolean ifDrawTool(){
 		return (tool >= 0 && tool <= 4);
 	}
 	
 	public boolean mouseCheck(int x1, int y1, int x2, int y2){
 		return mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2;
+	}
+	
+	public double getDistance(int x1, int y1, int x2, int y2){
+		return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 	}
 	
 	public void active() {
@@ -233,6 +249,9 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 
 	@Override
 	public void mousePressed(MouseEvent e) {
+		mousePressX = e.getX();
+		mousePressY = e.getY();
+		
 		int selectTool = -1;
 		for(int i=0; i<=buttonToolCount; i++){
 			if(mouseCheck(0, panelToolPosition + (i * 64), 64, panelToolPosition + ((i+1) * 64))){
@@ -241,10 +260,22 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			}
 		}
 		System.out.println(selectTool);
-		if(ifDrawTool() && selectTool == -1){
+		if(ifDrawTool() && selectTool == -1 && mouseLeft(e)){
 			pointList = new ArrayList<Point>();
 			penRecord = true;
 			System.out.println("Started " + penRecord);
+			
+			if(tool == 1){
+				pointList.add(new Point(mouseX, mouseY));
+				pointList.add(new Point(mouseX, mouseY));
+			}
+			if(tool == 3){
+				pointList.add(new Point(mouseX, mouseY));
+				pointList.add(new Point(mouseX, mouseY));
+				pointList.add(new Point(mouseX, mouseY));
+				pointList.add(new Point(mouseX, mouseY));
+				pointList.add(new Point(mouseX, mouseY));
+			}
 		}
 	}
 
@@ -287,12 +318,32 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 					pointList.get(1).x = mouseX;
 					pointList.get(1).y = mouseY;
 					break;
-			}
-			if(tool == 0){
-				
-			}
-			if(tool == 1){
-				
+				case 3:
+					pointList.get(1).x = mouseX;
+					pointList.get(2).x = mouseX;
+					pointList.get(2).y = mouseY;
+					pointList.get(3).y = mouseY;
+					break;
+				case 4:
+					pointList = new ArrayList<Point>();
+					//double rad = getDistance(mousePressX, mousePressY, mouseX, mouseY);
+					int p = 5;
+					int count = 360/p;
+			        double cx = mousePressX;//+(mouseX-mousePressX);
+			        double cy = mousePressY;//+(mouseY-mousePressY);
+			        double r = Math.max(1, getDistance((int)mousePressX, (int)mousePressY, (int)mouseX, (int)mouseY));
+			        for(int theta = 0; theta < 360+p; theta+=p)
+			        {
+			        	//r += 1;
+			        	/*if(theta > theta/4){
+			        		
+			        	}*/
+			        	
+			            int x = (int)(cx + r * Math.cos(Math.toRadians(theta)));
+			            int y = (int)(cy + r * Math.sin(Math.toRadians(theta)));
+			            pointList.add(new Point(x, y));
+			        }
+					break;
 			}
 		}
 	}
