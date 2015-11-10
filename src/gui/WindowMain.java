@@ -26,8 +26,8 @@ import core.*;
 
 public class WindowMain extends JPanel implements KeyListener, MouseListener, MouseMotionListener {
 	
-	public int screenWidth = 1000;
-	public int screenHeight = 1000;
+	public int screenWidth = 1280;
+	public int screenHeight = 720;
 	
 	public double cameraX = 0;
 	public double cameraY = 0;
@@ -56,7 +56,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 
 	int panelToolPosition = 0;
 	int buttonToolSize = 0;
-	int buttonToolCount = 7;
+	int buttonToolCount = 6;
 	BufferedImage buttonToolGFX[] = new BufferedImage[16];
 	
 	int panelLayerPosition = 0;
@@ -87,19 +87,19 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
         
         buttonToolGFX[0] = loadGFX("assets/image/icon_pencil.png");
         buttonToolGFX[1] = loadGFX("assets/image/icon_line.png");
-        buttonToolGFX[2] = loadGFX("assets/image/icon_linecont.png");
-        buttonToolGFX[3] = loadGFX("assets/image/icon_rectangle.png");
-        buttonToolGFX[4] = loadGFX("assets/image/icon_circle.png");
-        buttonToolGFX[5] = loadGFX("assets/image/icon_eraser.png");
-        buttonToolGFX[6] = loadGFX("assets/image/icon_eraserplus.png");
+        //buttonToolGFX[2] = loadGFX("assets/image/icon_linecont.png");
+        buttonToolGFX[2] = loadGFX("assets/image/icon_rectangle.png");
+        buttonToolGFX[3] = loadGFX("assets/image/icon_circle.png");
+        buttonToolGFX[4] = loadGFX("assets/image/icon_eraser.png");
+        buttonToolGFX[5] = loadGFX("assets/image/icon_eraserplus.png");
         
+        buttonToolGFX[6] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[7] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[8] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[9] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[10] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[11] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[12] = loadGFX("assets/image/tool_button_0.png");
-        buttonToolGFX[13] = loadGFX("assets/image/tool_button_0.png");
         
         addLayer("Default", core.CollaborativeBoard.Nickname);
         /*JButton button = new JButton("Click Me");
@@ -121,11 +121,26 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		return layerList.size()-1;
 	}
 	
-	public void refreshLine(Graphics g){
-		Graphics2D g2d = (Graphics2D) g;
-		for(int i=0; i<layerBuffer.size()-1; i++){
-			g2d.drawImage(layerBuffer.get(i), 0, 0, null);
+	public void refreshBuffer(){
+		layerBuffer.set(index, new BufferedImage(4096, 4096, BufferedImage.TYPE_INT_ARGB));
+		Graphics2D g2d = layerBuffer.get(index).createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		for(Line i:layerList.get(index).data){
+			Line tmpline = i;
+			ArrayList<Point> tmpdata = i.data;
+			
+			int xPoly[] = new int[tmpdata.size()];
+			int yPoly[] = new int[tmpdata.size()];
+			for(int j=0; j<tmpdata.size(); j++){
+				xPoly[j] = tmpdata.get(j).x;
+				yPoly[j] = tmpdata.get(j).y;
+			}
+			g2d.setStroke(new BasicStroke(tmpline.size, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+			g2d.setColor(new Color(tmpline.color.getRed(), tmpline.color.getGreen(), tmpline.color.getBlue(), 255));
+			g2d.drawPolyline(xPoly, yPoly, xPoly.length);
 		}
+		g2d.dispose();
 	}
 	
 	public void applyLine(int layerID, Line lineData){
@@ -168,19 +183,11 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g2d.drawPolyline(xPoly, yPoly, xPoly.length);
 		g2d.dispose();
 	}
-	
-	boolean refresh = false;
 
 	public void paint(Graphics g){
 		super.paint(g);
 		screenWidth = getWidth();
 		screenHeight = getHeight();
-		//System.out.println(screenWidth + "," + screenHeight);
-		
-		if(refresh == true){
-			refreshLine(g);
-			refresh = false;
-		}
 		
 		int offsetX = (int)cameraX;
 		int offsetY = (int)cameraY;
@@ -213,7 +220,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	}
 	
 	public boolean ifDrawTool(){
-		return (tool >= 0 && tool <= 4);
+		return (tool >= 0 && tool <= 5);
 	}
 	
 	public boolean mouseCheck(int x1, int y1, int x2, int y2){
@@ -269,7 +276,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 				pointList.add(new Point(mouseX, mouseY));
 				pointList.add(new Point(mouseX, mouseY));
 			}
-			if(tool == 3){
+			if(tool == 2){
 				pointList.add(new Point(mouseX, mouseY));
 				pointList.add(new Point(mouseX, mouseY));
 				pointList.add(new Point(mouseX, mouseY));
@@ -318,13 +325,13 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 					pointList.get(1).x = mouseX;
 					pointList.get(1).y = mouseY;
 					break;
-				case 3:
+				case 2:
 					pointList.get(1).x = mouseX;
 					pointList.get(2).x = mouseX;
 					pointList.get(2).y = mouseY;
 					pointList.get(3).y = mouseY;
 					break;
-				case 4:
+				case 3:
 					pointList = new ArrayList<Point>();
 					//double rad = getDistance(mousePressX, mousePressY, mouseX, mouseY);
 					int p = 5;
@@ -343,6 +350,20 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			            int y = (int)(cy + r * Math.sin(Math.toRadians(theta)));
 			            pointList.add(new Point(x, y));
 			        }
+					break;
+				case 5:
+					for(Line i:layerList.get(index).data){
+						boolean remove = false;
+						for(Point j:i.data){
+							if(getDistance(mouseX, mouseY,(int)j.x, (int)j.y) < 1.0f){
+								remove = true;
+							}
+						}
+						if(remove){
+							layerList.get(index).data.remove(i);
+							refreshBuffer();
+						}
+					}
 					break;
 			}
 		}
