@@ -18,8 +18,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -27,8 +25,6 @@ import javax.swing.JPanel;
 import core.*;
 
 public class WindowMain extends JPanel implements KeyListener, MouseListener, MouseMotionListener {
-	
-	public String paperName = "UNNAMED PAPER";
 	
 	public int screenWidth = 1280;
 	public int screenHeight = 720;
@@ -120,19 +116,17 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g2d.setColor(new Color(0, 0, 0, 0));
 		g2d.setComposite(AlphaComposite.Src);
 		g2d.fill(new Rectangle2D.Float(20, 20, 100, 20));
-		g2d = null;
-		System.gc();
 		layerBuffer.add(buffer);
 		layerList.add(new Layer(name, author));
 		return layerList.size()-1;
 	}
 	
-	public void refreshBuffer(int layerIndex){
-		layerBuffer.set(layerIndex, new BufferedImage(4096, 4096, BufferedImage.TYPE_INT_ARGB));
+	public void refreshBuffer(){
+		layerBuffer.set(index, new BufferedImage(4096, 4096, BufferedImage.TYPE_INT_ARGB));
 		Graphics2D g2d = layerBuffer.get(index).createGraphics();
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		for(Line i:layerList.get(layerIndex).data){
+		for(Line i:layerList.get(index).data){
 			Line tmpline = i;
 			ArrayList<Point> tmpdata = i.data;
 			
@@ -147,8 +141,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			g2d.drawPolyline(xPoly, yPoly, xPoly.length);
 		}
 		g2d.dispose();
-		g2d = null;
-		System.gc();
 	}
 	
 	public void applyLine(int layerID, Line lineData){
@@ -169,8 +161,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g2d.setColor(new Color(tmpline.color.getRed(), tmpline.color.getGreen(), tmpline.color.getBlue(), 255));
 		g2d.drawPolyline(xPoly, yPoly, xPoly.length);
 		g2d.dispose();
-		g2d = null;
-		System.gc();
 	}
 	
 	public void getLine(Graphics g, Line lineData){
@@ -192,8 +182,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g2d.setColor(tmpline.color);
 		g2d.drawPolyline(xPoly, yPoly, xPoly.length);
 		g2d.dispose();
-		g2d = null;
-		System.gc();
 	}
 
 	public void paint(Graphics g){
@@ -225,9 +213,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g.drawString("Mouse Y: " + mouseY, 30, 70);
 		
 		g.drawOval(mouseX, mouseY, (int)toolSize, (int)toolSize);
-		
-		g = null;
-		System.gc();
 	}
 	
 	public boolean mouseLeft(MouseEvent e){
@@ -283,8 +268,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		}
 		System.out.println(selectTool);
 		if(ifDrawTool() && selectTool == -1 && mouseLeft(e)){
-			pointList = null;
-			System.gc();
 			pointList = new ArrayList<Point>();
 			penRecord = true;
 			System.out.println("Started " + penRecord);
@@ -312,9 +295,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			
 			applyLine(index, line);
 			System.out.println("Ended " + penRecord + "(Buffer "+ layerBuffer.size() +", Use "+ index +")");
-			pointList = null;
-			line = null;
-			System.gc();
 		}
 	}
 
@@ -352,8 +332,6 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 					pointList.get(3).y = mouseY;
 					break;
 				case 3:
-					pointList = null;
-					System.gc();
 					pointList = new ArrayList<Point>();
 					//double rad = getDistance(mousePressX, mousePressY, mouseX, mouseY);
 					int p = 5;
@@ -373,72 +351,19 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			            pointList.add(new Point(x, y));
 			        }
 					break;
-				case 4:
-					ArrayList<Integer> removeLineID = new ArrayList<Integer>();
-					ArrayList<Integer> removePointOffset = new ArrayList<Integer>();
-					
-					for(int i=0; i<layerList.get(index).data.size(); i++){
-						Line line = layerList.get(index).data.get(i);
-						for(int j=0; j<line.data.size(); j++){
-							if(getDistance(mouseX, mouseY,(int)line.data.get(j).x, (int)line.data.get(j).y) < 2.5f){
-								removeLineID.add(i);
-								removePointOffset.add(j);
-							}
-						}
-						line = null;
-						System.gc();
-					}
-
-					if(removeLineID.size() > 0){
-						for(int i=0; i<removeLineID.size(); i++){
-							Line line = layerList.get(index).data.get(i);
-							if(line.data.size() > 1){
-								List<Point> pointList1 = line.data.subList(0, removePointOffset.get(i)-1);
-								List<Point> pointList2 = line.data.subList(removePointOffset.get(i)+1, line.data.size()-1);
-								System.out.println("0-"+(removePointOffset.get(i)-1)+" "+(removePointOffset.get(i)+1)+"-"+(line.data.size()-1));
-								ArrayList<Point> newLine1 = new ArrayList<Point>();
-								ArrayList<Point> newLine2 = new ArrayList<Point>();
-								for(Point j:pointList1){
-									newLine1.add(j);
-								}
-								for(Point j:pointList2){
-									newLine2.add(j);
-								}
-								layerList.get(index).data.add(new Line(newLine1, line.size, line.color));
-								layerList.get(index).data.add(new Line(newLine2, line.size, line.color));
-								newLine1 = null;
-								newLine2 = null;
-								pointList1 = null;
-								pointList2 = null;
-								System.gc();
-							}
-							layerList.get(index).data.remove(i);
-							line = null;
-							System.gc();
-						}
-						refreshBuffer(index);
-					}
-					removeLineID = null;
-					removePointOffset = null;
-					System.gc();
-					break;
 				case 5:
-					ArrayList<Line> removeBuffer = new ArrayList<Line>();
 					for(Line i:layerList.get(index).data){
+						boolean remove = false;
 						for(Point j:i.data){
-							if(getDistance(mouseX, mouseY,(int)j.x, (int)j.y) < 2.5f){
-								removeBuffer.add(i);
+							if(getDistance(mouseX, mouseY,(int)j.x, (int)j.y) < 1.0f){
+								remove = true;
 							}
 						}
-					}
-					if(removeBuffer.size() > 0){
-						for(Line i:removeBuffer){
+						if(remove){
 							layerList.get(index).data.remove(i);
+							refreshBuffer();
 						}
-						refreshBuffer(index);
 					}
-					removeBuffer = null;
-					System.gc();
 					break;
 			}
 		}
