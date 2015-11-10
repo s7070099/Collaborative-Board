@@ -1,5 +1,10 @@
 package core;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 class Console extends Thread {
@@ -26,6 +31,50 @@ class Console extends Thread {
 			   
 			   Paper paper = new Paper("Test Paper", "Admin");
 			   paper.data = gui.Window.windowMain.layerList;
+			   paper.user.add("Mark");
+			   paper.user.add("Jimmy");
+			   paper.user.add("Guide");
+			   
+			   File file = new File(filename);
+			   FileWriter fileWriter;
+			   try {
+				   fileWriter = new FileWriter(file);
+				   BufferedWriter buffer = new BufferedWriter(fileWriter);
+				   buffer.write(paper.name);
+				   buffer.newLine();
+				   buffer.write(paper.author);
+				   buffer.newLine();
+				   buffer.write(paper.user.size()+"");
+				   buffer.newLine();
+				   for(String i:paper.user){
+					   buffer.write(i);
+					   buffer.newLine();
+				   }
+				   buffer.write(paper.data.size()+"");
+				   for(Layer i:paper.data){
+					   buffer.write(i.name);
+					   buffer.write(i.author);
+					   buffer.write(i.hidden+"");
+					   buffer.write(i.user.size()+"");
+					   for(String j:paper.user){
+						   buffer.write(j);
+						   buffer.newLine();
+					   }
+				   }
+				   
+				   /*
+				  		public String name;
+						public String author;
+						public Boolean hidden;
+						public ArrayList<String> user;
+						public ArrayList<Line> data;
+				    */
+				   System.out.println(paper.user.size());
+				   buffer.close();
+			   } catch (IOException e) {
+				   e.printStackTrace();
+				   System.out.println("Cannot call file writer!");
+			   } 
 			   //enter code here to save
 			   System.out.println("Save " + filename);
 		   }

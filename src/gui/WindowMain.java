@@ -276,7 +276,21 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		updateMousePosition(e);
 		
 		if(penRecord == true){
-			pointList.add(new Point(mouseX, mouseY));
+			switch(tool){
+				case 0: 
+					pointList.add(new Point(mouseX, mouseY));
+					break;
+				case 1:
+					pointList.get(1).x = mouseX;
+					pointList.get(1).y = mouseY;
+					break;
+			}
+			if(tool == 0){
+				
+			}
+			if(tool == 1){
+				
+			}
 		}
 	}
 
