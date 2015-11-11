@@ -13,6 +13,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -26,7 +28,7 @@ import javax.swing.JPanel;
 
 import core.*;
 
-public class WindowMain extends JPanel implements KeyListener, MouseListener, MouseMotionListener {
+public class WindowMain extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
 	
 	public String paperName = "UNNAMED PAPER";
 	
@@ -60,10 +62,20 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 
 	int panelToolPosition = 0;
 	int buttonToolSize = 0;
-	int buttonToolCount = 6;
+	int buttonToolCount = 5;
 	BufferedImage buttonToolGFX[] = new BufferedImage[16];
 	
-	int panelLayerPosition = 0;
+	int panelLayerPosX = 0;
+	int panelLayerPosY = 0;
+	int panelLayerSizeX = 192;
+	int panelLayerSizeY = 64;
+	int panelLayerScroll = 0;
+	BufferedImage panelLayerBuffer = new BufferedImage(128, 512, BufferedImage.TYPE_INT_ARGB);
+	
+	public void clearMem(Object a){
+		a = null;
+		System.gc();
+	}
 	
 	public BufferedImage loadGFX(String filePath){
 		BufferedImage buffer = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
@@ -86,6 +98,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		
         addKeyListener(this);
         addMouseListener(this);
+        addMouseWheelListener(this);
         addMouseMotionListener(this);
         setFocusable(true);
         
@@ -94,18 +107,31 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
         //buttonToolGFX[2] = loadGFX("assets/image/icon_linecont.png");
         buttonToolGFX[2] = loadGFX("assets/image/icon_rectangle.png");
         buttonToolGFX[3] = loadGFX("assets/image/icon_circle.png");
-        buttonToolGFX[4] = loadGFX("assets/image/icon_eraser.png");
-        buttonToolGFX[5] = loadGFX("assets/image/icon_eraserplus.png");
+        //buttonToolGFX[4] = loadGFX("assets/image/icon_eraser.png");
+        buttonToolGFX[4] = loadGFX("assets/image/icon_eraserplus.png");
         
+        buttonToolGFX[5] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[6] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[7] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[8] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[9] = loadGFX("assets/image/tool_button_0.png");
-        buttonToolGFX[10] = loadGFX("assets/image/tool_button_0.png");
-        buttonToolGFX[11] = loadGFX("assets/image/tool_button_0.png");
-        buttonToolGFX[12] = loadGFX("assets/image/tool_button_0.png");
+        //buttonToolGFX[11] = loadGFX("assets/image/tool_button_0.png");
+        //buttonToolGFX[12] = loadGFX("assets/image/tool_button_0.png");
         
-        addLayer("Default", core.CollaborativeBoard.Nickname);
+        Graphics2D g2d = panelLayerBuffer.createGraphics();
+		g2d.setColor(new Color(0, 0, 0, 0));
+		g2d.setComposite(AlphaComposite.Src);
+		g2d.fill(new Rectangle2D.Float(20, 20, 100, 20));
+		g2d = null;
+		System.gc();
+        
+        addLayer("Default1", core.CollaborativeBoard.Nickname);
+        addLayer("Default2", core.CollaborativeBoard.Nickname);
+        addLayer("Default3", core.CollaborativeBoard.Nickname);
+        addLayer("Default4", core.CollaborativeBoard.Nickname);
+        addLayer("Default5", core.CollaborativeBoard.Nickname);
+        addLayer("Default6", core.CollaborativeBoard.Nickname);
+        addLayer("Default7", core.CollaborativeBoard.Nickname);
         /*JButton button = new JButton("Click Me");
         button.setBounds(5, 5, 50, 30);
         add(button);*/
@@ -119,12 +145,29 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		Graphics2D g2d = buffer.createGraphics();
 		g2d.setColor(new Color(0, 0, 0, 0));
 		g2d.setComposite(AlphaComposite.Src);
-		g2d.fill(new Rectangle2D.Float(20, 20, 100, 20));
+		g2d.fill(new Rectangle2D.Float(0, 00, 500, 500));
 		g2d = null;
 		System.gc();
 		layerBuffer.add(buffer);
 		layerList.add(new Layer(name, author));
 		return layerList.size()-1;
+	}
+	
+	public void refreshPanelLayer(){
+		panelLayerBuffer = null;
+		System.gc();
+		
+		panelLayerBuffer = new BufferedImage(panelLayerSizeX, 512, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = panelLayerBuffer.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		for(int i=0; i<layerList.size(); i++){
+			g2d.setColor(Color.BLACK);
+			g2d.drawString(layerList.get(i).name, 0, panelLayerScroll + 10 + ((i) * panelLayerSizeY));
+		}
+		g2d.dispose();
+		g2d = null;
+		System.gc();
 	}
 	
 	public void refreshBuffer(int layerIndex){
@@ -220,6 +263,11 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			g.drawImage(buttonToolGFX[i], 0, panelToolPosition + (i * 64), null);
 		}
 		
+		refreshPanelLayer();
+		panelLayerPosX = screenWidth-panelLayerSizeX;
+		panelLayerPosY = 48;
+		g.drawImage(panelLayerBuffer, panelLayerPosX, panelLayerPosY, null);
+		
 		g.setColor(Color.BLACK);
 		g.drawString("Mouse X: " + mouseX, 30, 50);
 		g.drawString("Mouse Y: " + mouseY, 30, 70);
@@ -306,6 +354,13 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		if(ifDrawTool() && penRecord == true){
+			if(pointList.size() == 1){
+				pointList.add(new Point(mouseX, mouseY));
+			}else if(pointList.size() == 0){
+				pointList.add(new Point(mouseX, mouseY));
+				pointList.add(new Point(mouseX, mouseY));
+			}
+			
 			Line line = new Line(pointList, toolSize, toolColor);
 			layerList.get(index).data.add(line);
 			penRecord = false;
@@ -373,7 +428,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			            pointList.add(new Point(x, y));
 			        }
 					break;
-				case 4:
+				case 5:
 					ArrayList<Integer> removeLineID = new ArrayList<Integer>();
 					ArrayList<Integer> removePointOffset = new ArrayList<Integer>();
 					
@@ -422,7 +477,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 					removePointOffset = null;
 					System.gc();
 					break;
-				case 5:
+				case 4:
 					ArrayList<Line> removeBuffer = new ArrayList<Line>();
 					for(Line i:layerList.get(index).data){
 						for(Point j:i.data){
@@ -447,6 +502,13 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		updateMousePosition(e);
+	}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		System.out.println(e.getWheelRotation());
+		panelLayerScroll -= e.getWheelRotation() * 4;
+		repaint();
 	}
 
 }
