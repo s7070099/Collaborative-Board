@@ -4,7 +4,7 @@ import javax.swing.JFrame;
 
 public class CollaborativeBoard {
 	
-	public static String AppName = "Collaborative Board";
+	public static String AppName = "Collaborative Workspace";
 	public static String AppVersion = "1.0.0";
 	
 	public static String Nickname = "nickname";

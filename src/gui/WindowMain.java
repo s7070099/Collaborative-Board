@@ -3,11 +3,16 @@ package gui;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.TexturePaint;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -29,12 +34,13 @@ import javax.swing.JPanel;
 
 import core.*;
 
-public class WindowMain extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
+public class WindowMain extends JPanel implements ComponentListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
 	
 	public String paperName = "UNNAMED PAPER";
 	
 	public int screenWidth = 1280;
 	public int screenHeight = 720;
+	public int screenHeightMid = 360;
 	
 	public double cameraX = 0;
 	public double cameraY = 0;
@@ -45,7 +51,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	public int mouseX = 0;
 	public int mouseY = 0;
 	
-	public int tool = 0;
+	public int tool = 2;
 	public float toolSize = 2f;
 	public Color toolColor = Color.BLACK;
 	
@@ -63,16 +69,26 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 
 	int panelToolPosition = 0;
 	int buttonToolSize = 0;
-	int buttonToolCount = 5;
-	BufferedImage buttonToolGFX[] = new BufferedImage[16];
+	int buttonToolCount = 7;
+	BufferedImage buttonToolGFX[] = new BufferedImage[buttonToolCount * 2];
+	BufferedImage panelToolGFX[] = new BufferedImage[16];
 	
-	int panelLayerMaxShow = 6;
+	int panelLayerMaxShow = 3;
 	int panelLayerPosX = 0;
 	int panelLayerPosY = 0;
 	int panelLayerSizeX = 192;
-	int panelLayerSizeY = 64;
+	int panelLayerSizeY = 128;
 	int panelLayerScroll = 0;
+	BufferedImage panelLayerGFX[] = new BufferedImage[16];
 	BufferedImage panelLayerBuffer = new BufferedImage(128, 512, BufferedImage.TYPE_INT_ARGB);
+	
+	Font DIN;
+	
+	public void updateAll(){
+		refreshPanelLayer();
+		repaint();
+		validate();
+	}
 	
 	public void clearMem(Object a){
 		a = null;
@@ -92,7 +108,28 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		return buffer;
 	}
 	
+	public Font loadFont(String filename){
+		Font customFont = null;
+		try {
+            //create the font to use. Specify the size!
+			customFont = Font.createFont(Font.TRUETYPE_FONT, new File(filename));//.deriveFont(12f);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            //register the font
+            ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File(filename)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch(FontFormatException e)
+        {
+            e.printStackTrace();
+        }
+		return customFont;
+	}
+	
 	public WindowMain(int screenWidth, int screenHeight) {
+		this.screenWidth = screenWidth;
+		this.screenHeight = screenHeight;
+		
 		setBounds(0, 0, screenWidth, screenHeight);
 		setOpaque(true);
 		setBackground(Color.WHITE);
@@ -102,23 +139,36 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
         addMouseListener(this);
         addMouseWheelListener(this);
         addMouseMotionListener(this);
+        addComponentListener(this);
         setFocusable(true);
         
-        buttonToolGFX[0] = loadGFX("assets/image/icon_pencil.png");
-        buttonToolGFX[1] = loadGFX("assets/image/icon_line.png");
-        //buttonToolGFX[2] = loadGFX("assets/image/icon_linecont.png");
-        buttonToolGFX[2] = loadGFX("assets/image/icon_rectangle.png");
-        buttonToolGFX[3] = loadGFX("assets/image/icon_circle.png");
-        //buttonToolGFX[4] = loadGFX("assets/image/icon_eraser.png");
-        buttonToolGFX[4] = loadGFX("assets/image/icon_eraser.png");
+        buttonToolGFX[0] = loadGFX("assets/image/tool_button_0.png");
+        buttonToolGFX[1] = loadGFX("assets/image/tool_button_0.png");
+        buttonToolGFX[2] = loadGFX("assets/image/icon_pencil.png");
+        buttonToolGFX[3] = loadGFX("assets/image/icon_line.png");
+        buttonToolGFX[4] = loadGFX("assets/image/icon_rectangle.png");
+        buttonToolGFX[5] = loadGFX("assets/image/icon_circle.png");
+        buttonToolGFX[6] = loadGFX("assets/image/icon_eraser.png");
         
-        buttonToolGFX[5] = loadGFX("assets/image/tool_button_0.png");
-        buttonToolGFX[6] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[7] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[8] = loadGFX("assets/image/tool_button_0.png");
         buttonToolGFX[9] = loadGFX("assets/image/tool_button_0.png");
-        //buttonToolGFX[11] = loadGFX("assets/image/tool_button_0.png");
-        //buttonToolGFX[12] = loadGFX("assets/image/tool_button_0.png");
+        buttonToolGFX[10] = loadGFX("assets/image/tool_button_0.png");
+        buttonToolGFX[11] = loadGFX("assets/image/tool_button_0.png");
+        buttonToolGFX[12] = loadGFX("assets/image/tool_button_0.png");
+        buttonToolGFX[13] = loadGFX("assets/image/tool_button_0.png");
+        
+        panelToolGFX[0] = loadGFX("assets/image/tool.png");
+        
+        panelLayerGFX[0] = loadGFX("assets/image/layer.png");
+        panelLayerGFX[1] = loadGFX("assets/image/layer_visible.png");
+        panelLayerGFX[2] = loadGFX("assets/image/layer_up.png");
+        panelLayerGFX[3] = loadGFX("assets/image/layer_down.png");
+        panelLayerGFX[4] = loadGFX("assets/image/layer_adduser.png");
+        panelLayerGFX[5] = loadGFX("assets/image/layer_delete.png");
+        panelLayerGFX[6] = loadGFX("assets/image/layer_hidden.png");
+        
+        DIN = loadFont("assets/font/DIN-Regular.ttf");
         
         Graphics2D g2d = panelLayerBuffer.createGraphics();
 		g2d.setColor(new Color(0, 0, 0, 0));
@@ -127,23 +177,25 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g2d = null;
 		System.gc();
         
-        addLayer("Default1", core.CollaborativeBoard.Nickname);
-        addLayer("Default2", core.CollaborativeBoard.Nickname);
-        addLayer("Default3", core.CollaborativeBoard.Nickname);
-        addLayer("Default4", core.CollaborativeBoard.Nickname);
-        addLayer("Default5", core.CollaborativeBoard.Nickname);
+        addLayer("Layer1", core.CollaborativeBoard.Nickname);
+        addLayer("Layer2", core.CollaborativeBoard.Nickname);
+        addLayer("Layer3", core.CollaborativeBoard.Nickname);
+        addLayer("Layer4", core.CollaborativeBoard.Nickname);
+        /*addLayer("Default5", core.CollaborativeBoard.Nickname);
         addLayer("Default6", core.CollaborativeBoard.Nickname);
-        addLayer("Default7", core.CollaborativeBoard.Nickname);
+        addLayer("Default7", core.CollaborativeBoard.Nickname);*/
         /*JButton button = new JButton("Click Me");
         button.setBounds(5, 5, 50, 30);
         add(button);*/
         layerList.get(0).user.add("FakeUser1");
         layerList.get(0).user.add("FakeUser2");
         layerList.get(0).user.add("FakeUser3");
+        
+        updateAll();
 	}
 	
 	public int addLayer(String name, String author){
-		BufferedImage buffer = new BufferedImage(4096, 4096, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage buffer = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = buffer.createGraphics();
 		g2d.setColor(new Color(0, 0, 0, 0));
 		g2d.setComposite(AlphaComposite.Src);
@@ -163,17 +215,35 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		for(int i=0; i<layerList.size(); i++){
-			int yStart = panelLayerScroll + ((i) * panelLayerSizeY);
+			int yStart = -panelLayerScroll + ((i) * panelLayerSizeY);
 			int yEnd = yStart + panelLayerSizeY;
+			if(index != i){
+				g2d.setColor(new Color(230, 230, 255, 255));
+				g2d.fillRect(0, yStart+1, panelLayerSizeX, panelLayerSizeY);
+			}
 			
-			if(i%2 == 0){ g2d.setColor(new Color(255, 0, 0, 128)); }else{ g2d.setColor(new Color(0, 255, 0, 128)); }
-			g2d.fillRect(0, yStart, panelLayerSizeX, panelLayerSizeY);
 			g2d.setColor(Color.BLACK);
-			g2d.drawString(layerList.get(i).name, 0, panelLayerScroll + 10 + ((i) * panelLayerSizeY));
+			g2d.setFont(DIN.deriveFont(14f));
+			g2d.drawString(layerList.get(i).name, 4, 14 + yStart);
+			g2d.setColor(Color.GRAY);
+			g2d.setFont(DIN.deriveFont(12f).deriveFont(Font.BOLD));//new Font("Verdana", Font.BOLD, 12));
+			g2d.drawString(layerList.get(i).author, 4, 27 + yStart);
 			//BufferedImage tmp = (BufferedImage) layerBuffer.get(i).getScaledInstance(1280, 720, Image.SCALE_SMOOTH);
 			g2d.setColor(new Color(255, 255, 255, 255));
-			g2d.fillRect(0, yStart+10, panelLayerSizeX, panelLayerSizeY-10);
-			g2d.drawImage(layerBuffer.get(i), 0, yStart, panelLayerSizeX, yEnd, 0, 0, 1280, 720, null);
+			g2d.fillRect(0, yStart+31, panelLayerSizeX, 72);
+			g2d.drawImage(layerBuffer.get(i), 0, yStart+31, panelLayerSizeX, yStart+103, 0, 0, screenWidth, screenHeight, null);
+			
+			g2d.setColor(new Color(230, 230, 230, 255));
+			g2d.drawLine(0, yStart+31, panelLayerSizeX, yStart+31);
+			g2d.drawLine(0, yStart+103, panelLayerSizeX, yStart+103);
+			
+			for(int j=1; j<=5; j++){
+				g2d.drawImage(panelLayerGFX[j], 36 * (j-1), yStart+103, null);
+				g2d.drawLine(j*36, yStart+103, j*36, yEnd);
+			}
+			
+			g2d.setColor(new Color(184, 184, 184, 255));
+			g2d.drawLine(0, yEnd, panelLayerSizeX, yEnd);
 			//tmp = null;
 		}
 		g2d.dispose();
@@ -182,7 +252,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	}
 	
 	public void refreshBuffer(int layerIndex){
-		layerBuffer.set(layerIndex, new BufferedImage(4096, 4096, BufferedImage.TYPE_INT_ARGB));
+		layerBuffer.set(layerIndex, new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB));
 		Graphics2D g2d = layerBuffer.get(index).createGraphics();
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -252,40 +322,55 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 
 	public void paint(Graphics g){
 		super.paint(g);
-		screenWidth = getWidth();
+		screenWidth = getWidth()+20;
 		screenHeight = getHeight();
+		screenHeightMid = screenHeight/2;
+		//System.out.println(screenWidth+", "+screenHeight);
 		
 		int offsetX = (int)cameraX;
 		int offsetY = (int)cameraY;
-		int sizeX = (int)4096;
-		int sizeY = (int)4096;
+		int sizeX = (int)1920;
+		int sizeY = (int)1080;
 		for(int i=0; i<layerBuffer.size(); i++){
 			g.drawImage(layerBuffer.get(i), offsetX, offsetY, sizeX, sizeY, null);
 			if(i == index){
-				if(penRecord == true){
+				if(penRecord == true && ifDrawTool()){
 					getLine(g, new Line(pointList, toolSize, toolColor));
 				}
 			}
 		}
 		
-		panelToolPosition = (screenHeight/2) - ((buttonToolCount * 64)/2);
+		panelToolPosition = screenHeightMid - ((buttonToolCount * 48)/2);
 		
+		g.drawImage(panelToolGFX[0], 0, panelToolPosition-17, null);
 		for(int i=0; i<buttonToolCount; i++){
-			g.drawImage(buttonToolGFX[i], 0, panelToolPosition + (i * 64), null);
+			g.drawImage(buttonToolGFX[i], 0, panelToolPosition + (i * 48), 48, 48, null);
 		}
 		
-		refreshPanelLayer();
 		panelLayerPosX = screenWidth-panelLayerSizeX;
-		panelLayerPosY = panelLayerSizeY;
-		g.drawImage(panelLayerBuffer, panelLayerPosX, panelLayerPosY, null);
-		g.setColor(Color.BLACK);
-		g.drawRect(panelLayerPosX, panelLayerPosY, panelLayerSizeX, panelLayerSizeY * panelLayerMaxShow);
+		panelLayerPosY = screenHeightMid-((panelLayerSizeY * panelLayerMaxShow)/2);
 		
-		g.setColor(Color.BLACK);
+		//g.drawImage(panelLayerGFX[0], panelLayerPosX-36, panelLayerPosY-24, null);
+		g.drawImage(panelLayerGFX[0], panelLayerPosX-36, panelLayerPosY-16, null);
+		g.drawImage(panelLayerBuffer, panelLayerPosX-7, panelLayerPosY, null);
+		
+		g.setColor(new Color(184, 184, 184, 255));
+		
+		int tmp = panelLayerPosY + (panelLayerSizeY * panelLayerMaxShow);
+		g.drawLine(panelLayerPosX-7, tmp, panelLayerPosX+panelLayerSizeX, tmp);
+		//g.drawImage(,,);
+		//g.setColor(Color.BLACK);
+		//g.drawRect(panelLayerPosX, panelLayerPosY, panelLayerSizeX, panelLayerSizeY * panelLayerMaxShow);
+		
+		/*g.setColor(Color.BLACK);
 		g.drawString("Mouse X: " + mouseX, 30, 50);
-		g.drawString("Mouse Y: " + mouseY, 30, 70);
+		g.drawString("Mouse Y: " + mouseY, 30, 70);*/
 		
-		g.drawOval(mouseX, mouseY, (int)toolSize, (int)toolSize);
+		if(tool == 6){
+			g.drawOval(mouseX, mouseY, 12, 12);
+		}else{
+			g.drawOval(mouseX, mouseY, (int)toolSize, (int)toolSize);
+		}
 		
 		g = null;
 		System.gc();
@@ -296,7 +381,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	}
 	
 	public boolean ifDrawTool(){
-		return (tool >= 0 && tool <= 5);
+		return (tool >= 2 && tool <= 5);
 	}
 	
 	public boolean mouseCheck(int x1, int y1, int x2, int y2){
@@ -337,52 +422,63 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		
 		int selectTool = -1;
 		for(int i=0; i<=buttonToolCount; i++){
-			if(mouseCheck(0, panelToolPosition + (i * 64), 64, panelToolPosition + ((i+1) * 64))){
+			if(mouseCheck(0, panelToolPosition + (i * 48), 48, panelToolPosition + ((i+1) * 48))){
 				selectTool = i;
 				tool = selectTool;
+				System.out.println("Change tool to " + tool);
+				return;
 			}
 		}
-		System.out.println(selectTool);
-		if(ifDrawTool() && selectTool == -1 && mouseLeft(e)){
+		System.out.println(selectTool + ", penrecord " + penRecord);
+		if(selectTool == -1 && mouseLeft(e)){
+			System.out.println("Start with " + selectTool);
 			pointList = null;
 			System.gc();
 			pointList = new ArrayList<Point>();
 			penRecord = true;
-			System.out.println("Started " + penRecord);
-			
-			if(tool == 1){
-				pointList.add(new Point(mouseX, mouseY));
-				pointList.add(new Point(mouseX, mouseY));
+			if(ifDrawTool()){
+				System.out.println("Draw Tool Confirm >> " + tool);
+				//System.out.println("Started " + penRecord);
+				
+				if(tool == 3){
+					pointList.add(new Point(mouseX, mouseY));
+					pointList.add(new Point(mouseX, mouseY));
+				}
+				if(tool == 4){
+					pointList.add(new Point(mouseX, mouseY));
+					pointList.add(new Point(mouseX, mouseY));
+					pointList.add(new Point(mouseX, mouseY));
+					pointList.add(new Point(mouseX, mouseY));
+					pointList.add(new Point(mouseX, mouseY));
+				}
 			}
-			if(tool == 2){
-				pointList.add(new Point(mouseX, mouseY));
-				pointList.add(new Point(mouseX, mouseY));
-				pointList.add(new Point(mouseX, mouseY));
-				pointList.add(new Point(mouseX, mouseY));
-				pointList.add(new Point(mouseX, mouseY));
-			}
+			System.out.println(pointList.size());
 		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		if(ifDrawTool() && penRecord == true){
-			if(pointList.size() == 1){
-				pointList.add(new Point(mouseX, mouseY));
-			}else if(pointList.size() == 0){
-				pointList.add(new Point(mouseX, mouseY));
-				pointList.add(new Point(mouseX, mouseY));
+		if(penRecord == true){
+			if(ifDrawTool()){
+				if(pointList.size() == 1){
+					pointList.add(new Point(mouseX, mouseY));
+				}else if(pointList.size() == 0){
+					pointList.add(new Point(mouseX, mouseY));
+					pointList.add(new Point(mouseX, mouseY));
+				}
+				
+				Line line = new Line(pointList, toolSize, toolColor);
+				layerList.get(index).data.add(line);
+				
+				applyLine(index, line);
+				//System.out.println("Ended " + penRecord + "(Buffer "+ layerBuffer.size() +", Use "+ index +")");
+				pointList = null;
+				line = null;
+				System.gc();
 			}
-			
-			Line line = new Line(pointList, toolSize, toolColor);
-			layerList.get(index).data.add(line);
+			refreshPanelLayer();
+			repaint();
 			penRecord = false;
-			
-			applyLine(index, line);
-			System.out.println("Ended " + penRecord + "(Buffer "+ layerBuffer.size() +", Use "+ index +")");
-			pointList = null;
-			line = null;
-			System.gc();
 		}
 	}
 
@@ -406,20 +502,20 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 		
 		if(penRecord == true){
 			switch(tool){
-				case 0: 
+				case 2: 
 					pointList.add(new Point(mouseX, mouseY));
 					break;
-				case 1:
+				case 3:
 					pointList.get(1).x = mouseX;
 					pointList.get(1).y = mouseY;
 					break;
-				case 2:
+				case 4:
 					pointList.get(1).x = mouseX;
 					pointList.get(2).x = mouseX;
 					pointList.get(2).y = mouseY;
 					pointList.get(3).y = mouseY;
 					break;
-				case 3:
+				case 5:
 					pointList = null;
 					System.gc();
 					pointList = new ArrayList<Point>();
@@ -441,7 +537,7 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 			            pointList.add(new Point(x, y));
 			        }
 					break;
-				case 5:
+				case 7:
 					ArrayList<Integer> removeLineID = new ArrayList<Integer>();
 					ArrayList<Integer> removePointOffset = new ArrayList<Integer>();
 					
@@ -490,11 +586,11 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 					removePointOffset = null;
 					System.gc();
 					break;
-				case 4:
+				case 6:
 					ArrayList<Line> removeBuffer = new ArrayList<Line>();
 					for(Line i:layerList.get(index).data){
 						for(Point j:i.data){
-							if(getDistance(mouseX, mouseY,(int)j.x, (int)j.y) < 2.5f){
+							if(getDistance(mouseX, mouseY,(int)j.x, (int)j.y) < 12.5f){
 								removeBuffer.add(i);
 							}
 						}
@@ -520,8 +616,39 @@ public class WindowMain extends JPanel implements KeyListener, MouseListener, Mo
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		System.out.println(e.getWheelRotation());
-		panelLayerScroll -= e.getWheelRotation() * 4;
+		panelLayerScroll -= e.getWheelRotation() * 16;
+		System.out.println(layerList.size()-panelLayerMaxShow);
+		panelLayerScroll = Math.max(Math.min(panelLayerScroll, panelLayerSizeY * Math.max(layerList.size()-panelLayerMaxShow, 0)), 0);
+		refreshPanelLayer();
 		repaint();
+	}
+
+	@Override
+	public void componentResized(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+		/*refreshPanelLayer();
+		invalidate();*/
+		//updateAll();
+		System.out.println("resized");
+	}
+
+	@Override
+	public void componentMoved(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void componentShown(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
