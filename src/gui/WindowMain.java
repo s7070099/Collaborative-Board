@@ -30,6 +30,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import core.*;
@@ -38,22 +39,32 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	
 	public String paperName = "UNNAMED PAPER";
 	
+	public boolean keyShift = false;
+	
 	public int screenWidth = 1280;
 	public int screenHeight = 720;
 	public int screenHeightMid = 360;
 	
-	public double cameraX = 0;
-	public double cameraY = 0;
+	public int cameraX = 0;
+	public int cameraY = 0;
 	public double cameraZoom = 0;
+	
+	public int cameraPressX = 0;
+	public int cameraPressY = 0;
 	
 	public int mousePressX = 0;
 	public int mousePressY = 0;
+	public int mousePressRX = 0;
+	public int mousePressRY = 0;
 	public int mouseX = 0;
 	public int mouseY = 0;
+	public int mouseRX = 0;
+	public int mouseRY = 0;
 	
 	public int tool = 2;
 	public float toolSize = 2f;
 	public Color toolColor = Color.BLACK;
+	public Color toolColorMacro[] = new Color[32];
 	
 	public boolean penRecord = false;
 	public int index = 0;
@@ -139,12 +150,13 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		setBackground(Color.WHITE);
 		setVisible(true);
 		
-        addKeyListener(this);
+		addKeyListener(this);
         addMouseListener(this);
         addMouseWheelListener(this);
         addMouseMotionListener(this);
         addComponentListener(this);
         setFocusable(true);
+        
         
         captionGFX = loadGFX("assets/image/caption.png");
         
@@ -183,10 +195,10 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		g2d = null;
 		System.gc();
         
-        addLayer("Layer1", core.CollaborativeBoard.Nickname);
-        addLayer("Layer2", core.CollaborativeBoard.Nickname);
+        addLayer("Default", core.CollaborativeBoard.Nickname);
+        /*addLayer("Layer2", core.CollaborativeBoard.Nickname);
         addLayer("Layer3", core.CollaborativeBoard.Nickname);
-        addLayer("Layer4", core.CollaborativeBoard.Nickname);
+        addLayer("Layer4", core.CollaborativeBoard.Nickname);*/
         /*addLayer("Default5", core.CollaborativeBoard.Nickname);
         addLayer("Default6", core.CollaborativeBoard.Nickname);
         addLayer("Default7", core.CollaborativeBoard.Nickname);*/
@@ -197,7 +209,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
         layerList.get(0).user.add("FakeUser2");
         layerList.get(0).user.add("FakeUser3");
         
-        updateAll();
+        //updateAll();
 	}
 	
 	public int addLayer(String name, String author){
@@ -241,13 +253,13 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			g2d.fillRect(0, yStart+31, panelLayerSizeX, 72);
 			g2d.drawImage(layerBuffer.get(i), 0, yStart+31, panelLayerSizeX, yStart+103, 0, 0, screenWidth, screenHeight, null);
 
+			g2d.setColor(new Color(230, 230, 230, 255));
 			for(int j=1; j<=5; j++){
 				g2d.drawImage(panelLayerGFX[j], 36 * (j-1), yStart+103, null);
 				g2d.drawLine(j*36, yStart+103, j*36, yEnd);
 			}
 			if(layerList.get(i).hidden){ g2d.drawImage(panelLayerGFX[6], 0, yStart+103, null); }
 			
-			g2d.setColor(new Color(230, 230, 230, 255));
 			g2d.drawLine(0, yStart+31, panelLayerSizeX, yStart+31);
 			g2d.drawLine(0, yStart+103, panelLayerSizeX, yStart+103);
 			
@@ -273,8 +285,8 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			int xPoly[] = new int[tmpdata.size()];
 			int yPoly[] = new int[tmpdata.size()];
 			for(int j=0; j<tmpdata.size(); j++){
-				xPoly[j] = tmpdata.get(j).x;
-				yPoly[j] = tmpdata.get(j).y;
+				xPoly[j] = tmpdata.get(j).x + cameraX;
+				yPoly[j] = tmpdata.get(j).y + cameraY;
 			}
 			g2d.setStroke(new BasicStroke(tmpline.size, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g2d.setColor(new Color(tmpline.color.getRed(), tmpline.color.getGreen(), tmpline.color.getBlue(), 255));
@@ -372,6 +384,10 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		
 		int tmp = panelLayerPosY + (panelLayerSizeY * panelLayerMaxShow);
 		g.drawLine(panelLayerPosX-7, tmp, panelLayerPosX+panelLayerSizeX, tmp);
+		g.setColor(Color.BLACK);
+		g.setFont(DIN.deriveFont(48f));
+		g.drawString("+", panelLayerPosX+64, tmp+36);
+		//g.drawRect(panelLayerPosX-7, tmp, panelLayerPosX+panelLayerSizeX, 44);
 		//g.drawImage(,,);
 		//g.setColor(Color.BLACK);
 		//g.drawRect(panelLayerPosX, panelLayerPosY, panelLayerSizeX, panelLayerSizeY * panelLayerMaxShow);
@@ -381,9 +397,9 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		g.drawString("Mouse Y: " + mouseY, 30, 70);*/
 		
 		if(tool == 6){
-			g.drawOval(mouseX, mouseY, 12, 12);
+			g.drawOval(mouseX - 6, mouseY - 6, 12, 12);
 		}else{
-			g.drawOval(mouseX, mouseY, (int)toolSize, (int)toolSize);
+			g.drawOval(mouseX - (int)toolSize/2, mouseY - (int)toolSize/2, (int)toolSize, (int)toolSize);
 		}
 		
 		g.drawImage(captionGFX, 0, 0, null);
@@ -398,10 +414,10 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		g.setColor(new Color(184, 184, 184, 255));
 		g.drawRect(2, panelToolPosition+2, 43, 43);
 		g.setColor(new Color(0, 0, 0, 255));
-		int tmpToolSize = (int)(toolSize);
+		int tmpToolSize = Math.max(1, (int)(toolSize));
 		g.fillOval(24 - (tmpToolSize/2), panelToolPosition + 48 + 24 - (tmpToolSize/2), tmpToolSize, tmpToolSize);
 		g.setFont(DIN.deriveFont(10f));
-		g.drawString(tmpToolSize+"", 24 - (g.getFontMetrics().stringWidth(tmpToolSize+"")/2), panelToolPosition + 92);
+		g.drawString(toolSize+"", 24 - (g.getFontMetrics().stringWidth(toolSize+"")/2), panelToolPosition + 92);
 		g.setFont(DIN.deriveFont(22f));
 		g.drawString("<    " + paperName + " / " + layerList.get(index).name, 12, 20);
 		
@@ -452,16 +468,28 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	public void mousePressed(MouseEvent e) {
 		mousePressX = e.getX();
 		mousePressY = e.getY();
+		cameraPressX = cameraX;
+		cameraPressY = cameraY;
+		mousePressRX = mousePressX + cameraX;
+		mousePressRY = mousePressY + cameraY;
 		
 		int selectTool = -1;
 		for(int i=0; i<=buttonToolCount; i++){
 			if(mouseCheck(0, panelToolPosition + (i * 48), 48, panelToolPosition + ((i+1) * 48))){
-				selectTool = i;
-				tool = selectTool;
-				System.out.println("Change tool to " + tool);
+				if(i > 1){
+					selectTool = i;
+					tool = selectTool;
+					System.out.println("Change tool to " + tool);
+				}
 				return;
 			}
 		}
+		
+		int tmpValue = panelLayerPosY + (panelLayerSizeY * panelLayerMaxShow);
+		if(mouseCheck(panelLayerPosX-7, tmpValue, panelLayerPosX+panelLayerSizeX, tmpValue+44)){
+			addLayer(core.CollaborativeBoard.Nickname + "'s Layer", core.CollaborativeBoard.Nickname);
+		}
+		//g.drawLine(panelLayerPosX-7, tmp, panelLayerPosX+panelLayerSizeX, tmp)
 		
 		for(int i=0; i<5; i++){
 			int tmpX = panelLayerPosX - 7;
@@ -559,7 +587,12 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 					pointList.add(new Point(mouseX, mouseY));
 				}
 				
-				Line line = new Line(pointList, toolSize, toolColor);
+				ArrayList<Point> tmpLine = new ArrayList<Point>();
+				for(Point i:pointList){
+					tmpLine.add(new Point(i.x - cameraX, i.y - cameraY));
+				}
+				
+				Line line = new Line(tmpLine, toolSize, toolColor);
 				layerList.get(index).data.add(line);
 				
 				applyLine(index, line);
@@ -585,12 +618,21 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	public void updateMousePosition(MouseEvent e){
 		mouseX = e.getX();
 		mouseY = e.getY();
+		mouseRX = mouseX + cameraX;
+		mouseRY = mouseY + cameraY;
 		repaint();
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		updateMousePosition(e);
+		
+		if(keyShift){
+			cameraX = cameraPressX-mousePressX+mouseX;
+			cameraY = cameraPressY-mousePressY+mouseY;
+			//System.out.println(cameraX +", "+cameraY);
+			return;
+		}
 		
 		if(penRecord == true){
 			switch(tool){
@@ -630,7 +672,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			        }
 					break;
 				case 7:
-					ArrayList<Integer> removeLineID = new ArrayList<Integer>();
+					/*ArrayList<Integer> removeLineID = new ArrayList<Integer>();
 					ArrayList<Integer> removePointOffset = new ArrayList<Integer>();
 					
 					for(int i=0; i<layerList.get(index).data.size(); i++){
@@ -676,7 +718,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 					}
 					removeLineID = null;
 					removePointOffset = null;
-					System.gc();
+					System.gc();*/
 					break;
 				case 6:
 					ArrayList<Line> removeBuffer = new ArrayList<Line>();

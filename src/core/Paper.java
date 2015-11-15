@@ -8,6 +8,7 @@ public class Paper {
 	public String author;
 	public ArrayList<String> user;
 	public ArrayList<Layer> data;
+	public int onlineUser;
 	
 	public Paper(String name, String author){
 		this.name = name;

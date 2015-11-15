@@ -9,6 +9,7 @@ public class Layer {
 	public Boolean hidden;
 	public ArrayList<String> user;
 	public ArrayList<Line> data;
+	public int onlineUser;
 	
 	public Layer(String name, String author){
 		this.name = name;

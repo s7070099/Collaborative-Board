@@ -17,7 +17,7 @@ import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class Window extends JFrame {
+public class Window extends JFrame implements KeyListener {
 
 	private int screenWidth;
 	private int screenHeight;
@@ -29,6 +29,9 @@ public class Window extends JFrame {
 		this.screenWidth = screenWidth;
 		this.screenHeight = screenHeight;
 		
+		Image icon = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
+		setIconImage(icon);
+		
 		setTitle(Caption);
 		setBounds(0, 0, screenWidth, screenHeight);
 		setBackground(Color.WHITE);
@@ -37,8 +40,13 @@ public class Window extends JFrame {
 	    //setUndecorated(true);
 		setVisible(true);
 		
+		addKeyListener(this);
+		
 		windowMain = new WindowMain(screenWidth, screenHeight);
 		add(windowMain);
+		
+		/*WindowLogin windowLogin = new WindowLogin(screenWidth, screenHeight1);
+		add(windowLogin);*/
 	}
 
 	public void paint(Graphics g){
@@ -66,6 +74,27 @@ public class Window extends JFrame {
 		
 		//g.setFont(new Font("TimesRoman", Font.PLAIN, fontSize)); 
 		//g.drawLine(0, 0, 100, 100);
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		//System.out.println("keyTyped: "+e);
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		//System.out.println("keyPressed: "+e);
+		if(e.getKeyCode() == 16){
+			windowMain.keyShift = true;
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		//System.out.println("keyReleased: "+e);
+		if(e.getKeyCode() == 16){
+			windowMain.keyShift = false;
+		}
 	}
 
 }
