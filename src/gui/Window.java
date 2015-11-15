@@ -31,8 +31,10 @@ public class Window extends JFrame {
 		
 		setTitle(Caption);
 		setBounds(0, 0, screenWidth, screenHeight);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBackground(Color.WHITE);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setExtendedState(JFrame.MAXIMIZED_BOTH);
+	    //setUndecorated(true);
 		setVisible(true);
 		
 		windowMain = new WindowMain(screenWidth, screenHeight);

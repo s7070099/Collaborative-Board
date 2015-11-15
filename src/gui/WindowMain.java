@@ -66,6 +66,9 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	public ArrayList<Line> lineList = new ArrayList<Line>();
 	public ArrayList<Layer> layerList = new ArrayList<Layer>();
 	public ArrayList<BufferedImage> layerBuffer = new ArrayList<BufferedImage>();
+	
+	BufferedImage nullBuffer = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB);
+	BufferedImage captionGFX;
 
 	int panelToolPosition = 0;
 	int buttonToolSize = 0;
@@ -79,6 +82,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	int panelLayerSizeX = 192;
 	int panelLayerSizeY = 128;
 	int panelLayerScroll = 0;
+	int panelButtonPosY = 0;
 	BufferedImage panelLayerGFX[] = new BufferedImage[16];
 	BufferedImage panelLayerBuffer = new BufferedImage(128, 512, BufferedImage.TYPE_INT_ARGB);
 	
@@ -142,8 +146,10 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
         addComponentListener(this);
         setFocusable(true);
         
-        buttonToolGFX[0] = loadGFX("assets/image/tool_button_0.png");
-        buttonToolGFX[1] = loadGFX("assets/image/tool_button_0.png");
+        captionGFX = loadGFX("assets/image/caption.png");
+        
+        buttonToolGFX[0] = loadGFX("assets/image/icon_none.png");
+        buttonToolGFX[1] = loadGFX("assets/image/icon_none.png");
         buttonToolGFX[2] = loadGFX("assets/image/icon_pencil.png");
         buttonToolGFX[3] = loadGFX("assets/image/icon_line.png");
         buttonToolGFX[4] = loadGFX("assets/image/icon_rectangle.png");
@@ -162,9 +168,9 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
         
         panelLayerGFX[0] = loadGFX("assets/image/layer.png");
         panelLayerGFX[1] = loadGFX("assets/image/layer_visible.png");
-        panelLayerGFX[2] = loadGFX("assets/image/layer_up.png");
-        panelLayerGFX[3] = loadGFX("assets/image/layer_down.png");
-        panelLayerGFX[4] = loadGFX("assets/image/layer_adduser.png");
+        panelLayerGFX[2] = loadGFX("assets/image/layer_adduser.png");
+        panelLayerGFX[3] = loadGFX("assets/image/layer_up.png");
+        panelLayerGFX[4] = loadGFX("assets/image/layer_down.png");
         panelLayerGFX[5] = loadGFX("assets/image/layer_delete.png");
         panelLayerGFX[6] = loadGFX("assets/image/layer_hidden.png");
         
@@ -220,6 +226,8 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			if(index != i){
 				g2d.setColor(new Color(230, 230, 255, 255));
 				g2d.fillRect(0, yStart+1, panelLayerSizeX, panelLayerSizeY);
+			}else{
+				panelButtonPosY = yStart+103;
 			}
 			
 			g2d.setColor(Color.BLACK);
@@ -232,15 +240,16 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			g2d.setColor(new Color(255, 255, 255, 255));
 			g2d.fillRect(0, yStart+31, panelLayerSizeX, 72);
 			g2d.drawImage(layerBuffer.get(i), 0, yStart+31, panelLayerSizeX, yStart+103, 0, 0, screenWidth, screenHeight, null);
-			
-			g2d.setColor(new Color(230, 230, 230, 255));
-			g2d.drawLine(0, yStart+31, panelLayerSizeX, yStart+31);
-			g2d.drawLine(0, yStart+103, panelLayerSizeX, yStart+103);
-			
+
 			for(int j=1; j<=5; j++){
 				g2d.drawImage(panelLayerGFX[j], 36 * (j-1), yStart+103, null);
 				g2d.drawLine(j*36, yStart+103, j*36, yEnd);
 			}
+			if(layerList.get(i).hidden){ g2d.drawImage(panelLayerGFX[6], 0, yStart+103, null); }
+			
+			g2d.setColor(new Color(230, 230, 230, 255));
+			g2d.drawLine(0, yStart+31, panelLayerSizeX, yStart+31);
+			g2d.drawLine(0, yStart+103, panelLayerSizeX, yStart+103);
 			
 			g2d.setColor(new Color(184, 184, 184, 255));
 			g2d.drawLine(0, yEnd, panelLayerSizeX, yEnd);
@@ -253,6 +262,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	
 	public void refreshBuffer(int layerIndex){
 		layerBuffer.set(layerIndex, new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_ARGB));
+		//if(layerList.get(layerIndex).hidden) return;
 		Graphics2D g2d = layerBuffer.get(index).createGraphics();
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -332,7 +342,11 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		int sizeX = (int)1920;
 		int sizeY = (int)1080;
 		for(int i=0; i<layerBuffer.size(); i++){
-			g.drawImage(layerBuffer.get(i), offsetX, offsetY, sizeX, sizeY, null);
+			if(layerList.get(i).hidden){
+				g.drawImage(nullBuffer, offsetX, offsetY, null);
+			}else{
+				g.drawImage(layerBuffer.get(i), offsetX, offsetY, sizeX, sizeY, null);
+			}
 			if(i == index){
 				if(penRecord == true && ifDrawTool()){
 					getLine(g, new Line(pointList, toolSize, toolColor));
@@ -371,6 +385,25 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		}else{
 			g.drawOval(mouseX, mouseY, (int)toolSize, (int)toolSize);
 		}
+		
+		g.drawImage(captionGFX, 0, 0, null);
+		
+		
+		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		
+		g.setColor(Color.RED);
+		g.fillRect(2, panelToolPosition+2, 44, 44);
+		g.setColor(new Color(184, 184, 184, 255));
+		g.drawRect(2, panelToolPosition+2, 43, 43);
+		g.setColor(new Color(0, 0, 0, 255));
+		int tmpToolSize = (int)(toolSize);
+		g.fillOval(24 - (tmpToolSize/2), panelToolPosition + 48 + 24 - (tmpToolSize/2), tmpToolSize, tmpToolSize);
+		g.setFont(DIN.deriveFont(10f));
+		g.drawString(tmpToolSize+"", 24 - (g.getFontMetrics().stringWidth(tmpToolSize+"")/2), panelToolPosition + 92);
+		g.setFont(DIN.deriveFont(22f));
+		g.drawString("<    " + paperName + " / " + layerList.get(index).name, 12, 20);
 		
 		g = null;
 		System.gc();
@@ -429,15 +462,74 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 				return;
 			}
 		}
-		System.out.println(selectTool + ", penrecord " + penRecord);
+		
+		for(int i=0; i<5; i++){
+			int tmpX = panelLayerPosX - 7;
+			int tmpY = panelLayerPosY + panelButtonPosY;
+			if(mouseCheck(tmpX+(i*36), tmpY, tmpX+((i+1)*36)-1, tmpY+36)){
+				//System.out.println(i);
+				switch(i){
+					case 0:
+						layerList.get(index).hidden = !layerList.get(index).hidden;
+						System.out.println(layerList.get(index).hidden);
+						refreshBuffer(index);
+						break;
+					case 1:
+						
+						break;
+					case 2:
+						if(index > 0){
+							int tmpLayerID = index - 1;
+							Layer tmpLayer = layerList.get(index);
+							layerList.set(index, layerList.get(tmpLayerID));
+							layerList.set(tmpLayerID, tmpLayer);
+								
+							BufferedImage tmpLayerBuffer = layerBuffer.get(index);
+							layerBuffer.set(index, layerBuffer.get(tmpLayerID));
+							layerBuffer.set(tmpLayerID, tmpLayerBuffer);
+							
+							index = tmpLayerID;
+						}
+						break;
+					case 3:
+						int tmpLayerID = layerList.size()-1;
+						if(index < tmpLayerID){
+							tmpLayerID = index + 1;
+							Layer tmpLayer = layerList.get(index);
+							layerList.set(index, layerList.get(tmpLayerID));
+							layerList.set(tmpLayerID, tmpLayer);
+								
+							BufferedImage tmpLayerBuffer = layerBuffer.get(index);
+							layerBuffer.set(index, layerBuffer.get(tmpLayerID));
+							layerBuffer.set(tmpLayerID, tmpLayerBuffer);
+							
+							index = tmpLayerID;
+						}
+						break;
+						
+						
+					case 4:
+						if(layerList.size() > 1){
+							layerList.remove(index);
+							layerBuffer.remove(index);
+							if(index > 0){ 
+								index = index-1;
+							}
+						}
+						break;
+				}
+			}
+		}
+		
+		//System.out.println(selectTool + ", penrecord " + penRecord);
 		if(selectTool == -1 && mouseLeft(e)){
-			System.out.println("Start with " + selectTool);
+			//System.out.println("Start with " + selectTool);
 			pointList = null;
 			System.gc();
 			pointList = new ArrayList<Point>();
 			penRecord = true;
 			if(ifDrawTool()){
-				System.out.println("Draw Tool Confirm >> " + tool);
+				//System.out.println("Draw Tool Confirm >> " + tool);
 				//System.out.println("Started " + penRecord);
 				
 				if(tool == 3){
@@ -452,7 +544,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 					pointList.add(new Point(mouseX, mouseY));
 				}
 			}
-			System.out.println(pointList.size());
+			//System.out.println(pointList.size());
 		}
 	}
 
@@ -559,7 +651,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 							if(line.data.size() > 1){
 								List<Point> pointList1 = line.data.subList(0, removePointOffset.get(i)-1);
 								List<Point> pointList2 = line.data.subList(removePointOffset.get(i)+1, line.data.size()-1);
-								System.out.println("0-"+(removePointOffset.get(i)-1)+" "+(removePointOffset.get(i)+1)+"-"+(line.data.size()-1));
+								//System.out.println("0-"+(removePointOffset.get(i)-1)+" "+(removePointOffset.get(i)+1)+"-"+(line.data.size()-1));
 								ArrayList<Point> newLine1 = new ArrayList<Point>();
 								ArrayList<Point> newLine2 = new ArrayList<Point>();
 								for(Point j:pointList1){
