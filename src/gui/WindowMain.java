@@ -5,10 +5,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.TexturePaint;
 import java.awt.event.ComponentEvent;
@@ -21,6 +23,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -39,6 +42,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	
 	public String paperName = "UNNAMED PAPER";
 	
+	public boolean pageShift = false;
 	public boolean keyShift = false;
 	
 	public int screenWidth = 1280;
@@ -64,7 +68,6 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	public int tool = 2;
 	public float toolSize = 2f;
 	public Color toolColor = Color.BLACK;
-	public Color toolColorMacro[] = new Color[32];
 	
 	public boolean penRecord = false;
 	public int index = 0;
@@ -96,6 +99,25 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	int panelButtonPosY = 0;
 	BufferedImage panelLayerGFX[] = new BufferedImage[16];
 	BufferedImage panelLayerBuffer = new BufferedImage(128, 512, BufferedImage.TYPE_INT_ARGB);
+	
+	BufferedImage colorPanelGFX;
+	BufferedImage sizePanelGFX;
+	BufferedImage colorPanelBuffer;
+	BufferedImage sizePanelBuffer;
+	
+	public int subTool = 0;
+	boolean canPickMinor = false;
+	boolean canPickMajor = false;
+	double colorDirection = 353.5006408691406;
+	Point colorMajorPick = new Point(180, 93);
+	Point colorPick = new Point(57, 57+91);
+	Color colorMajor = Color.RED;
+	Color colorMinor = Color.BLACK;
+	public Color colorMacro[] = new Color[48];
+	
+	boolean canDrag = false;
+	int sizeDragValue = 0;
+	float sizeMacro[] = {0.7f, 1, 1.5f, 2, 2.5f, 3, 4, 5, 6, 7, 8, 10, 12, 15, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100};
 	
 	Font DIN;
 	
@@ -185,6 +207,12 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
         panelLayerGFX[4] = loadGFX("assets/image/layer_down.png");
         panelLayerGFX[5] = loadGFX("assets/image/layer_delete.png");
         panelLayerGFX[6] = loadGFX("assets/image/layer_hidden.png");
+        
+        colorPanelGFX = loadGFX("assets/image/color.png");
+        sizePanelGFX = loadGFX("assets/image/size.png");
+        for(int i=0; i<colorMacro.length; i++){
+        	colorMacro[i] = Color.WHITE;
+        }
         
         DIN = loadFont("assets/font/DIN-Regular.ttf");
         
@@ -284,13 +312,20 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			
 			int xPoly[] = new int[tmpdata.size()];
 			int yPoly[] = new int[tmpdata.size()];
+			int ignoreCount = 0;
 			for(int j=0; j<tmpdata.size(); j++){
-				xPoly[j] = tmpdata.get(j).x + cameraX;
-				yPoly[j] = tmpdata.get(j).y + cameraY;
+				int x = tmpdata.get(j).x;
+				int y = tmpdata.get(j).y;
+				//*if(x >= -cameraX && y >= -cameraY && x <= screenWidth - cameraX && y <= screenHeight + cameraY && x != 0 && y != 0){
+					xPoly[j] = x + cameraX;
+					yPoly[j] = y + cameraY;
+				//}else{
+				//	ignoreCount++;
+				//}
 			}
 			g2d.setStroke(new BasicStroke(tmpline.size, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 			g2d.setColor(new Color(tmpline.color.getRed(), tmpline.color.getGreen(), tmpline.color.getBlue(), 255));
-			g2d.drawPolyline(xPoly, yPoly, xPoly.length);
+			g2d.drawPolyline(xPoly, yPoly, xPoly.length-ignoreCount);
 		}
 		g2d.dispose();
 		g2d = null;
@@ -304,8 +339,8 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		int xPoly[] = new int[tmpdata.size()];
 		int yPoly[] = new int[tmpdata.size()];
 		for(int j=0; j<tmpdata.size(); j++){
-			xPoly[j] = tmpdata.get(j).x;
-			yPoly[j] = tmpdata.get(j).y;
+			xPoly[j] = tmpdata.get(j).x + cameraX;
+			yPoly[j] = tmpdata.get(j).y + cameraY;
 		}
 
 		Graphics2D g2d = layerBuffer.get(layerID).createGraphics();
@@ -342,6 +377,91 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		System.gc();
 	}
 
+	public void refreshColorPanel(){
+		colorPanelBuffer = new BufferedImage(206, 351, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = colorPanelBuffer.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2d.drawImage(colorPanelGFX, 0, 0, null);
+		//g2d.setPaint(new GradientPaint(0, 57, new, 0, 57+92, Color.BLACK));
+        //g2d.fill(new Rectangle(57, 57, 92, 92));
+		
+        //g2d.setPaint(new GradientPaint(57+46, 57+46, new Color(colorMajor.getRed(), colorMajor.getGreen(), colorMajor.getBlue(), 0), 57+92, 57, colorMajor));
+        g2d.setPaint(new GradientPaint(57, 0, Color.WHITE, 57+92, 0, colorMajor));
+        g2d.fill(new Rectangle(57, 57, 92, 92));
+        g2d.setPaint(new GradientPaint(0, 57, new Color(0, 0, 0, 0), 0, 57+92, Color.BLACK));
+        g2d.fill(new Rectangle(57, 57, 92, 92));
+        g2d.setColor(new Color(230, 230, 230));
+        g2d.drawRect(56, 56, 93, 93);
+        
+        int offsetCPX = 15;
+        int offsetCPY = 206;//250;
+        int offsetCPSX = 22;
+        int offsetCPSY = 22;
+        for(int j=0; j<6; j++){
+        	for(int i=0; i<8; i++){
+        		g2d.setColor(colorMacro[i+(j*8)]);
+        		g2d.fillRect(offsetCPX + (i*offsetCPSX), offsetCPY + (j*offsetCPSY), offsetCPSX - 2, offsetCPSY - 2);
+        		g2d.setColor(new Color(230, 230, 230));
+        		g2d.drawRect(offsetCPX + (i*offsetCPSX), offsetCPY + (j*offsetCPSY), offsetCPSX - 2, offsetCPSY - 2);
+        	}
+        }
+        
+        g2d.drawRect(colorPick.x-2, colorPick.y-2, 3, 3);
+        g2d.setColor(Color.BLACK);
+        g2d.drawRect(colorPick.x-3, colorPick.y-3, 5, 5);
+        
+        g2d.setColor(new Color(230, 230, 230));
+        g2d.drawRect(colorMajorPick.x-2, colorMajorPick.y-2, 3, 3);
+        g2d.setColor(Color.BLACK);
+        g2d.drawRect(colorMajorPick.x-3, colorMajorPick.y-3, 5, 5);
+        
+        colorMajor = new Color(colorPanelBuffer.getRGB(colorMajorPick.x, colorMajorPick.y));
+        colorMinor = new Color(colorPanelBuffer.getRGB(colorPick.x, colorPick.y));
+		toolColor = colorMinor;
+ 		g2d.dispose();
+		g2d = null;
+		System.gc();
+	}
+	
+	public void refreshSizePanel(){
+		sizePanelBuffer = new BufferedImage(206, 351, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = sizePanelBuffer.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g2d.drawImage(sizePanelGFX, 0, 0, null);
+		
+		g2d.setColor(new Color(0, 0, 0, 255));
+		for(int j=0; j<6; j++){
+			for(int i=0; i<4; i++){
+				float tmpSize = sizeMacro[(j*4)+i];
+				int tmpToolSize = Math.min(25, Math.max(1, (int)(tmpSize)));
+				
+				g2d.fillOval(7+24+ (48*i) - (tmpToolSize/2), 49+24 + (48*j) - (tmpToolSize/2), tmpToolSize, tmpToolSize);
+				g2d.setFont(DIN.deriveFont(10f));
+				g2d.drawString(tmpSize+"", 7+24 + (48*i) - (g2d.getFontMetrics().stringWidth(tmpSize+"")/2), 4+92+ (48*j));
+			}
+		}
+		
+		g2d.setColor(new Color(230, 230, 230));
+		g2d.drawLine(7, 7+48, 198, 7+48);
+		for(int i=0; i<6; i++){
+			g2d.drawLine(7, 7+48+(i*48), 198, 7+48+(i*48));
+		}
+		for(int i=0; i<4; i++){
+			g2d.drawLine(7+(i*48), 7+48, 7+(i*48), 7+48+(6*48));
+		}
+		
+		g2d.drawRect(7+4, 7+24 - 2, 180, 4);
+		g2d.setColor(new Color(60, 60, 60));
+		g2d.fillRect(7+5, 7+25 - 2, sizeDragValue+1, 3);
+		g2d.fillRect(7+4+sizeDragValue+1, 7+24 - 7, 4, 14);
+		
+		g2d.dispose();
+		g2d = null;
+		System.gc();
+	}
+
 	public void paint(Graphics g){
 		super.paint(g);
 		screenWidth = getWidth()+20;
@@ -355,9 +475,9 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		int sizeY = (int)1080;
 		for(int i=0; i<layerBuffer.size(); i++){
 			if(layerList.get(i).hidden){
-				g.drawImage(nullBuffer, offsetX, offsetY, null);
+				g.drawImage(nullBuffer, 0, 0, null);
 			}else{
-				g.drawImage(layerBuffer.get(i), offsetX, offsetY, sizeX, sizeY, null);
+				g.drawImage(layerBuffer.get(i), 0, 0, sizeX, sizeY, null);
 			}
 			if(i == index){
 				if(penRecord == true && ifDrawTool()){
@@ -396,6 +516,12 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		g.drawString("Mouse X: " + mouseX, 30, 50);
 		g.drawString("Mouse Y: " + mouseY, 30, 70);*/
 		
+		if(subTool == 1){
+			g.drawImage(colorPanelBuffer, 52, panelLayerPosY+16, null);
+		}else if(subTool == 2){
+			g.drawImage(sizePanelBuffer, 52, panelLayerPosY+16, null);
+		}
+		
 		if(tool == 6){
 			g.drawOval(mouseX - 6, mouseY - 6, 12, 12);
 		}else{
@@ -409,12 +535,12 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		
-		g.setColor(Color.RED);
+		g.setColor(toolColor);
 		g.fillRect(2, panelToolPosition+2, 44, 44);
 		g.setColor(new Color(184, 184, 184, 255));
 		g.drawRect(2, panelToolPosition+2, 43, 43);
 		g.setColor(new Color(0, 0, 0, 255));
-		int tmpToolSize = Math.max(1, (int)(toolSize));
+		int tmpToolSize = Math.min(25, Math.max(1, (int)(toolSize)));
 		g.fillOval(24 - (tmpToolSize/2), panelToolPosition + 48 + 24 - (tmpToolSize/2), tmpToolSize, tmpToolSize);
 		g.setFont(DIN.deriveFont(10f));
 		g.drawString(toolSize+"", 24 - (g.getFontMetrics().stringWidth(toolSize+"")/2), panelToolPosition + 92);
@@ -429,6 +555,14 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		return e.getModifiers() == InputEvent.BUTTON1_MASK;
 	}
 	
+	public boolean mouseRight(MouseEvent e){
+		return e.getModifiers() == InputEvent.BUTTON2_MASK;
+	}
+	
+	public boolean mouseMiddle(MouseEvent e){
+		return e.getModifiers() == InputEvent.BUTTON3_MASK;
+	}
+	
 	public boolean ifDrawTool(){
 		return (tool >= 2 && tool <= 5);
 	}
@@ -441,8 +575,46 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 	}
 	
-	public void active() {
-		
+	public double getAngle(int x1, int y1, int x2, int y2) {
+	    float angle = (float) Math.toDegrees(Math.atan2(y2 - y1, x2 - x1));
+
+	    if(angle < 0){
+	        angle += 360;
+	    }
+	    return angle;
+	}
+	
+	public boolean onSubPanel(){
+		return mouseCheck(52, panelLayerPosY+16, 52+7+192, panelLayerPosY+16+337);
+	}
+	
+	public void colorPick() {
+		colorPick.x = Math.max(0, Math.min(91, mouseX-52-57)) + 57;
+		colorPick.y = Math.max(0, Math.min(91, mouseY-panelLayerPosY-57-16)) + 57;
+		System.out.println(colorMinor);
+	}
+	
+	public void colorMajorPick(){
+		colorDirection = getAngle(52+57+46, panelLayerPosY+16+57+46, mouseX, mouseY);//+90)%360;
+		double angle = colorDirection * Math.PI / 180;
+		colorMajorPick.x = (int) (52+52/*+46*/ + (77 * Math.cos(angle)));
+		colorMajorPick.y = (int) (52+50 + (77 * Math.sin(angle)));
+		System.out.println(colorDirection+":: " + colorMajorPick.x + ", " + colorMajorPick.y);
+	}
+	
+	public void sizeDrag(){
+		sizeDragValue = Math.max(0, Math.min(180, mouseX-52-7-4));
+		toolSize = Math.max((sizeDragValue*100)/180, 0.7f);
+		//System.out.println(sizeDragValue);
+	}
+	
+	public void addMacroColor(){
+		for(int i=46; i>=0; i--){
+			colorMacro[i+1] = colorMacro[i];
+		}
+		colorMacro[0] = colorMinor;
+		refreshColorPanel();
+		repaint();
 	}
 
 	@Override
@@ -474,15 +646,54 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		mousePressRY = mousePressY + cameraY;
 		
 		int selectTool = -1;
-		for(int i=0; i<=buttonToolCount; i++){
+		for(int i=0; i<buttonToolCount; i++){
 			if(mouseCheck(0, panelToolPosition + (i * 48), 48, panelToolPosition + ((i+1) * 48))){
+				selectTool = i;
 				if(i > 1){
-					selectTool = i;
 					tool = selectTool;
-					System.out.println("Change tool to " + tool);
+					//System.out.println("Change tool to " + tool);
+				}else{
+					if(subTool-1 != selectTool){
+						subTool = i+1;
+						if(subTool == 1){ refreshColorPanel(); }
+						if(subTool == 2){ refreshSizePanel(); }
+						repaint();
+					}else{
+						subTool = 0;
+						repaint();
+					}
+					//System.out.println("Call panel " + subTool);
 				}
 				return;
 			}
+		}
+		
+		if(selectTool > 1){
+			subTool = 0;
+		}
+
+		if(onSubPanel() && subTool != 0){
+			if(subTool == 1){
+				if(mouseCheck(52+57, panelLayerPosY+16+57, 52+57+92, panelLayerPosY+16+57+92)){
+					canPickMinor = true;
+					colorPick();
+				}
+				double mouseRange = getDistance(52+57+46,  panelLayerPosY+16+57+46, mouseX, mouseY);System.out.println(mouseRange);
+				if(mouseRange > 70 && mouseRange < 87){
+					canPickMajor = true;
+					colorMajorPick();
+				}
+			}
+			if(subTool == 2){
+				if(mouseCheck(52+7, panelLayerPosY+16+7, 52+7+192, panelLayerPosY+16+7+48)){
+					canDrag = true;
+					sizeDrag();
+					refreshSizePanel();
+					repaint();
+				}
+				
+			}
+			selectTool = -2;
 		}
 		
 		int tmpValue = panelLayerPosY + (panelLayerSizeY * panelLayerMaxShow);
@@ -578,6 +789,13 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if(canPickMinor || canPickMajor){
+			addMacroColor();
+		}
+		canDrag = false;
+		canPickMinor = false;
+		canPickMajor = false;
+		
 		if(penRecord == true){
 			if(ifDrawTool()){
 				if(pointList.size() == 1){
@@ -605,6 +823,12 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			repaint();
 			penRecord = false;
 		}
+		if(pageShift){
+			for(int i=0; i<layerList.size(); i++){
+				refreshBuffer(index);
+			}
+			pageShift = false;
+		}
 	}
 
 	@Override
@@ -627,9 +851,31 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	public void mouseDragged(MouseEvent e) {
 		updateMousePosition(e);
 		
+		if(canDrag){
+			sizeDrag();
+			refreshSizePanel();
+			repaint();
+		}
+		
+		if(canPickMinor){
+			colorPick();
+			refreshColorPanel();
+			repaint();
+		}
+		
+		if(canPickMajor){
+			colorMajorPick();
+			refreshColorPanel();
+			repaint();
+		}
+
 		if(keyShift){
+			pageShift = true;
 			cameraX = cameraPressX-mousePressX+mouseX;
 			cameraY = cameraPressY-mousePressY+mouseY;
+			refreshBuffer(index);
+			refreshPanelLayer();
+			repaint();
 			//System.out.println(cameraX +", "+cameraY);
 			return;
 		}
@@ -724,7 +970,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 					ArrayList<Line> removeBuffer = new ArrayList<Line>();
 					for(Line i:layerList.get(index).data){
 						for(Point j:i.data){
-							if(getDistance(mouseX, mouseY,(int)j.x, (int)j.y) < 12.5f){
+							if(getDistance(mouseX, mouseY,(int)j.x + cameraX, (int)j.y + cameraY) < 12.5f){
 								removeBuffer.add(i);
 							}
 						}
