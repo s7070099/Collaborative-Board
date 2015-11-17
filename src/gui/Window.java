@@ -22,8 +22,9 @@ public class Window extends JFrame implements KeyListener {
 	private int screenWidth;
 	private int screenHeight;
 	
+	public static WindowLogin windowLogin;
 	public static WindowMain windowMain;
-	public static WindowDrawTool windowDrawTool;
+	public static WindowServerConsole windowServerConsole;
 	
 	public void goToList(){
 		/*remove(windowMain);
@@ -37,12 +38,38 @@ public class Window extends JFrame implements KeyListener {
 		
 	}
 	
-	public void goToLogin(){
+	public void goToSelectPaper(){
 		
 	}
 	
+	public void goToLogin(){
+	
+	}
+	
+	public void goToLogin2(){
+		windowServerConsole.removeAll();
+		windowServerConsole.revalidate();
+		remove(windowServerConsole);
+		windowServerConsole = null;
+		System.gc();
+		windowLogin = new WindowLogin();
+		add(windowLogin);
+		windowLogin.panel.setVisible(false);
+		windowLogin.panelServerConfig.setVisible(true);
+		//windowLogin.setVisible(true);
+		//windowServerConsole.setVisible(false);
+	}
+	
 	public void goToServerConsole(){
-		
+		windowLogin.removeAll();
+		windowLogin.revalidate();
+		remove(windowLogin);
+		windowLogin = null;
+		System.gc();
+		windowServerConsole = new WindowServerConsole();
+		add(windowServerConsole);
+		//windowLogin.setVisible(false);
+		//windowServerConsole.setVisible(true);
 	}
 	
 	public Window(String Caption, int screenWidth, int screenHeight) {
@@ -61,11 +88,20 @@ public class Window extends JFrame implements KeyListener {
 	    //setUndecorated(true);
 		addKeyListener(this);
 		
-		WindowLogin windowLogin = new WindowLogin(screenWidth, screenHeight);
+		
+		//add(windowServerConsole);
+		
+		windowLogin = new WindowLogin();
 		add(windowLogin);
 		
-		/*windowMain = new WindowMain(screenWidth, screenHeight);
-		add(windowMain);*/
+		//windowServerConsole = new WindowServerConsole();
+		//add(windowServerConsole);
+		//windowServerConsole.setVisible(false);
+		
+		//windowMain = new WindowMain();
+		//add(windowMain);
+		//windowMain.setVisible(false);
+		//add(windowMain);
 		//pack();
 	    setLocationRelativeTo(null);
 	    setVisible(true);

@@ -51,7 +51,7 @@ public class WindowLogin extends JPanel{
 	
 	Thread threadA;
 	
-	public WindowLogin(int screenWidth, int screenHeight){
+	public WindowLogin(){
 		setLayout(null);
 		setBounds(0, 0, screenWidth, screenHeight);
 		setOpaque(true);
@@ -70,8 +70,8 @@ public class WindowLogin extends JPanel{
 	
 				oldName = bufReader.readLine();
 				oldServerIP = bufReader.readLine();
-				autologin = bufReader.readLine().equals("1");
 				remember_svip = bufReader.readLine().equals("1");
+				autologin = bufReader.readLine().equals("1");
 				
 				if(remember_svip == false){
 					oldName = "";
@@ -151,6 +151,7 @@ public class WindowLogin extends JPanel{
         portInput.setPlaceholder("Server Port (Default: 9999)");
         portInput.setFont(new Font("", getFont().getStyle(), 16));
         portInput.setDisabledTextColor(Color.LIGHT_GRAY);
+        portInput.setText(svPort+"");
         panelServerConfig.add(portInput);
         
         final PlaceholderTextField maxPaperInput = new PlaceholderTextField("");
@@ -158,6 +159,7 @@ public class WindowLogin extends JPanel{
         maxPaperInput.setPlaceholder("Maximum Paper");
         maxPaperInput.setFont(new Font("", getFont().getStyle(), 16));
         maxPaperInput.setDisabledTextColor(Color.LIGHT_GRAY);
+        maxPaperInput.setText(svPaper+"");
         panelServerConfig.add(maxPaperInput);
         
         final PlaceholderTextField maxUserInput = new PlaceholderTextField("");
@@ -165,6 +167,7 @@ public class WindowLogin extends JPanel{
         maxUserInput.setPlaceholder("Maximum User");
         maxUserInput.setFont(new Font("", getFont().getStyle(), 16));
         maxUserInput.setDisabledTextColor(Color.LIGHT_GRAY);
+        maxUserInput.setText(svUser+"");
         panelServerConfig.add(maxUserInput);
         
         final PlaceholderTextField fileInput = new PlaceholderTextField("");
@@ -173,6 +176,7 @@ public class WindowLogin extends JPanel{
         fileInput.setPlaceholder("Save file Directory");
         fileInput.setFont(new Font("", getFont().getStyle(), 16));
         fileInput.setDisabledTextColor(Color.LIGHT_GRAY);
+        fileInput.setText(svDirectory+"");
         panelServerConfig.add(fileInput);
         
         JButton selectButton = new JButton("...");
@@ -190,8 +194,6 @@ public class WindowLogin extends JPanel{
 				 int result = fChooser.showSaveDialog(null);
 				 if (result == JFileChooser.APPROVE_OPTION) {
 				     File selectedFile = fChooser.getSelectedFile();
-				     //System.out.println("Selected file: " + selectedFile.getAbsolutePath());
-				     //System.out.println("Selected file: " + selectedFile.getAbsolutePath());
 				     fileInput.setText(selectedFile.getAbsolutePath());
 				 }
 			 }
@@ -201,6 +203,7 @@ public class WindowLogin extends JPanel{
 		option3.setState(true);
 		option3.setBounds(0, 230, 260, 20);
 		option3.setBackground(Color.WHITE);
+		option3.setState(remember_svconfig);
 		panelServerConfig.add(option3);
 
 		JButton cancelServerButton = new JButton("Cancel");
@@ -224,8 +227,50 @@ public class WindowLogin extends JPanel{
 		startServerbutton.addActionListener(new ActionListener(){
 			 public void actionPerformed(ActionEvent e)
 			 {
-				 panel.setVisible(true);
-				 panelServerConfig.setVisible(false);
+				 if(portInput.getText().length() != 0) 
+					 svPort = Integer.parseInt(portInput.getText());
+				 if(maxPaperInput.getText().length() != 0) 
+					 svPaper = Integer.parseInt(maxPaperInput.getText());
+				 if(maxUserInput.getText().length() != 0) 
+					 svUser = Integer.parseInt(maxUserInput.getText());
+				 String svDirectory = fileInput.getText();
+
+				 int errorcode = 0;
+				 String info = null;
+				 
+				 if(svPort <= 0) svPort = 9999;
+				 if(svPaper <= 0) svPaper = 32;
+				 if(svUser <= 0) svUser = 12;
+				 
+				 File tmpFile = new File(svDirectory);
+				 if(!tmpFile.exists()){
+					 tmpFile.mkdirs(); 
+					if(!tmpFile.exists()){
+						errorcode = 1;
+						info = "cannot create save directory !";
+					}
+				 }
+				 
+				 Network.serverPort = svPort;
+				 Network.serverPaper = svPaper;
+				 Network.serverUser = svUser;
+				 Network.serverDirectory = svDirectory;
+				 
+				 if(errorcode == 0){
+					 Network.mode = 2;
+					 CollaborativeBoard.window.goToServerConsole();
+					 
+					 threadA = new Thread(new Runnable(){
+				            public void run(){
+				            	panel.setVisible(true);
+				            	panelConnecting.setVisible(false);
+				            	Network.server.start();
+				            }
+				     }, "Server");
+					 threadA.start();
+				 }else{
+					 JOptionPane.showMessageDialog (null, info, "ERROR", JOptionPane.ERROR_MESSAGE);
+				 }
 			 }
 		});
         
@@ -286,7 +331,7 @@ public class WindowLogin extends JPanel{
 				            	panel.setVisible(true);
 				            	panelConnecting.setVisible(false);
 				            }
-				     }, "Client_Connecting");
+				     }, "Client");
 					 threadA.start();
 					 
 					 panel.setVisible(false);

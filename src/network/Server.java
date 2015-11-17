@@ -13,67 +13,62 @@ import java.util.Calendar;
  
 public class Server {
  
-    ServerSocket myServerSocket;
-    boolean ServerOn = true;
+	ServerSocket myServerSocket;
+    public boolean ServerOn = true;
+    
+    public void print(String text){
+    	Network.print(text);
+    }
  
-    public Server(int serverPort) 
-    { 
+    public boolean start() 
+    {
+    	ServerOn = true;
         try { 
-            myServerSocket = new ServerSocket(serverPort); 
+            myServerSocket = new ServerSocket(Network.serverPort);
+            myServerSocket.setReuseAddress(true);
+            print("Start server successfully !");
         } catch(IOException ioe) { 
-            System.out.println("Could not create server socket on port "+serverPort+". Quitting."); 
-            System.exit(-1); 
+        	print("Could not create server socket on port "+Network.serverPort+". Quitting."); 
+            return false;
         } 
- 
-        Calendar now = Calendar.getInstance();
-        SimpleDateFormat formatter = new SimpleDateFormat("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
-        System.out.println("It is now : " + formatter.format(now.getTime()));
-
+        
         while(ServerOn) {                        
             try { 
                 Socket clientSocket = myServerSocket.accept(); 
                 ClientServiceThread cliThread = new ClientServiceThread(clientSocket);
                 cliThread.start(); 
- 
             } catch(IOException ioe) { 
-                System.out.println("Exception encountered on accept. Ignoring. Stack Trace :"); 
+            	print("Exception encountered on accept. Ignoring. Stack Trace :"); 
                 ioe.printStackTrace(); 
             } 
- 
         }
  
         try { 
             myServerSocket.close(); 
-            System.out.println("Server Stopped"); 
+            print("Server Stopped"); 
         } catch(Exception ioe) { 
-            System.out.println("Problem stopping server socket"); 
-            System.exit(-1); 
+        	print("Problem stopping server socket"); 
+        	return false;
         } 
+        return true;
     } 
 
-    class ClientServiceThread extends Thread 
-    { 
+    class ClientServiceThread extends Thread { 
         Socket myClientSocket;
         boolean m_bRunThread = true; 
  
-        public ClientServiceThread() 
-        { 
+        public ClientServiceThread(){ 
             super(); 
         } 
  
-        ClientServiceThread(Socket s) 
-        { 
+        ClientServiceThread(Socket s){ 
             myClientSocket = s; 
- 
         } 
  
-        public void run() 
-        { 
+        public void run(){ 
             BufferedReader in = null; 
             PrintWriter out = null; 
- 
-            // Print out details of this connection 
-            System.out.println("Accepted Client Address - " + myClientSocket.getInetAddress().getHostName()); 
+            print("Incomming Connection " + myClientSocket.getInetAddress().getHostName() + "..."); 
  
             try
             {                                
@@ -81,13 +76,13 @@ public class Server {
                 out = new PrintWriter(new OutputStreamWriter(myClientSocket.getOutputStream())); 
  
                 while(m_bRunThread) 
-                {                    
+                {                 
                     String clientCommand = in.readLine(); 
-                    System.out.println("Client Says :" + clientCommand);
+                    print("Client Says :" + clientCommand);
  
                     if(!ServerOn) 
                     { 
-                        System.out.print("Server has already stopped"); 
+                    	print("Server has already stopped"); 
                         out.println("Server has already stopped"); 
                         out.flush(); 
                         m_bRunThread = false;   
@@ -96,11 +91,11 @@ public class Server {
  
                     if(clientCommand.equalsIgnoreCase("quit")) { 
                         m_bRunThread = false;   
-                        System.out.print("Stopping client thread for client : "); 
+                        print("Stopping client thread for client : "); 
                     } else if(clientCommand.equalsIgnoreCase("end")) { 
                         m_bRunThread = false;   
-                        System.out.print("Stopping client thread for client : "); 
-                        ServerOn = false;
+                        print("Stopping client thread for client : "); 
+                        //ServerOn = false;
                     } else {
                         out.println("Server Says : " + clientCommand); 
                         out.flush(); 
@@ -118,7 +113,7 @@ public class Server {
                     in.close(); 
                     out.close(); 
                     myClientSocket.close(); 
-                    System.out.println("...Stopped"); 
+                    print("...Stopped"); 
                 } 
                 catch(IOException ioe) 
                 { 

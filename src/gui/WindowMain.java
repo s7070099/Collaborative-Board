@@ -165,7 +165,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		return customFont;
 	}
 	
-	public WindowMain(int screenWidth, int screenHeight) {
+	public WindowMain() {
 		this.screenWidth = screenWidth;
 		this.screenHeight = screenHeight;
 		
