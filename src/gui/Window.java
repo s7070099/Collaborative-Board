@@ -25,6 +25,22 @@ public class Window extends JFrame implements KeyListener {
 	public static WindowMain windowMain;
 	public static WindowDrawTool windowDrawTool;
 	
+	public void goToList(){
+		/*remove(windowMain);
+		windowMain = null;
+		System.gc();
+		windowMain = new WindowMain(screenWidth, screenHeight);
+		add(windowMain);*/
+	}
+	
+	public void goToPaper(){
+		
+	}
+	
+	public void goToLogin(){
+		
+	}
+	
 	public Window(String Caption, int screenWidth, int screenHeight) {
 		this.screenWidth = screenWidth;
 		this.screenHeight = screenHeight;
@@ -36,21 +52,24 @@ public class Window extends JFrame implements KeyListener {
 		setBounds(0, 0, screenWidth, screenHeight);
 		setBackground(Color.WHITE);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
 		//setExtendedState(JFrame.MAXIMIZED_BOTH);
 	    //setUndecorated(true);
-		setVisible(true);
-		
 		addKeyListener(this);
 		
-		windowMain = new WindowMain(screenWidth, screenHeight);
-		add(windowMain);
+		WindowLogin windowLogin = new WindowLogin(screenWidth, screenHeight);
+		add(windowLogin);
 		
-		/*WindowLogin windowLogin = new WindowLogin(screenWidth, screenHeight1);
-		add(windowLogin);*/
+		/*windowMain = new WindowMain(screenWidth, screenHeight);
+		add(windowMain);*/
+		//pack();
+	    setLocationRelativeTo(null);
+	    setVisible(true);
 	}
+	
 
 	public void paint(Graphics g){
-		//super.paint(g);
+		super.paint(g);
 		/*bimage = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_BYTE_INDEXED);
 		g2d = bimage.createGraphics();
 

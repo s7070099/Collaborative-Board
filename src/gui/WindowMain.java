@@ -99,6 +99,8 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	int panelButtonPosY = 0;
 	BufferedImage panelLayerGFX[] = new BufferedImage[16];
 	BufferedImage panelLayerBuffer = new BufferedImage(128, 512, BufferedImage.TYPE_INT_ARGB);
+	int panelSlotPos[] = new int[panelLayerMaxShow+3];
+	int panelSlotID[] = new int[panelLayerMaxShow+3];
 	
 	BufferedImage colorPanelGFX;
 	BufferedImage sizePanelGFX;
@@ -117,7 +119,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	
 	boolean canDrag = false;
 	int sizeDragValue = 0;
-	float sizeMacro[] = {0.7f, 1, 1.5f, 2, 2.5f, 3, 4, 5, 6, 7, 8, 10, 12, 15, 17, 20, 25, 30, 40, 50, 60, 70, 80, 100};
+	float sizeMacro[] = {0.7f, 1, 1.5f, 2, 2.5f, 3, 4, 5, 6, 7, 8, 10, 12, 15, 17, 20, 25, 30, 40, 50, 60, 70, 80, 1000};
 	
 	Font DIN;
 	
@@ -132,7 +134,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		System.gc();
 	}
 	
-	public BufferedImage loadGFX(String filePath){
+	public static BufferedImage loadGFX(String filePath){
 		BufferedImage buffer = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		try
         {
@@ -145,7 +147,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		return buffer;
 	}
 	
-	public Font loadFont(String filename){
+	public static Font loadFont(String filename){
 		Font customFont = null;
 		try {
             //create the font to use. Specify the size!
@@ -260,6 +262,8 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		Graphics2D g2d = panelLayerBuffer.createGraphics();
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		
+		int tmpSlotCount = 1;
 		for(int i=0; i<layerList.size(); i++){
 			int yStart = -panelLayerScroll + ((i) * panelLayerSizeY);
 			int yEnd = yStart + panelLayerSizeY;
@@ -293,8 +297,18 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			
 			g2d.setColor(new Color(184, 184, 184, 255));
 			g2d.drawLine(0, yEnd, panelLayerSizeX, yEnd);
+			
+			if(yEnd > 0  && tmpSlotCount < panelLayerMaxShow+2){ 
+				panelSlotPos[tmpSlotCount] = panelLayerPosY+yEnd-7;
+				panelSlotID[tmpSlotCount] = i;
+				tmpSlotCount++;
+			}
 			//tmp = null;
 		}
+		panelSlotPos[0] = 0;
+		panelSlotID[0] = 0;
+		panelSlotPos[panelLayerMaxShow+2] = panelLayerMaxShow * panelLayerSizeY;
+		panelSlotID[panelLayerMaxShow+2] = 0;
 		g2d.dispose();
 		g2d = null;
 		System.gc();
@@ -530,7 +544,6 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		
 		g.drawImage(captionGFX, 0, 0, null);
 		
-		
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -541,7 +554,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		g.drawRect(2, panelToolPosition+2, 43, 43);
 		g.setColor(new Color(0, 0, 0, 255));
 		int tmpToolSize = Math.min(25, Math.max(1, (int)(toolSize)));
-		g.fillOval(24 - (tmpToolSize/2), panelToolPosition + 48 + 24 - (tmpToolSize/2), tmpToolSize, tmpToolSize);
+		g.fillOval(24 - (tmpToolSize/2), panelToolPosition - 4 + 48 + 24 - (tmpToolSize/2), tmpToolSize, tmpToolSize);
 		g.setFont(DIN.deriveFont(10f));
 		g.drawString(toolSize+"", 24 - (g.getFontMetrics().stringWidth(toolSize+"")/2), panelToolPosition + 92);
 		g.setFont(DIN.deriveFont(22f));
@@ -586,6 +599,10 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	
 	public boolean onSubPanel(){
 		return mouseCheck(52, panelLayerPosY+16, 52+7+192, panelLayerPosY+16+337);
+	}
+	
+	public boolean onLayerPanel(){
+		return mouseCheck(panelLayerPosX-7, panelLayerPosY, screenWidth, panelLayerPosY+(panelLayerSizeY*panelLayerMaxShow));
 	}
 	
 	public void colorPick() {
@@ -645,6 +662,12 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		mousePressRX = mousePressX + cameraX;
 		mousePressRY = mousePressY + cameraY;
 		
+		if(mouseCheck(0, 0, 48, 32)){
+			CollaborativeBoard.window.goToList();
+			System.out.println("Exit");
+			return;
+		}
+		
 		int selectTool = -1;
 		for(int i=0; i<buttonToolCount; i++){
 			if(mouseCheck(0, panelToolPosition + (i * 48), 48, panelToolPosition + ((i+1) * 48))){
@@ -691,7 +714,19 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 					refreshSizePanel();
 					repaint();
 				}
-				
+				for(int j=0; j<6; j++){
+					for(int i=0; i<4; i++){
+						if(mouseCheck(52+7+(48*i), panelLayerPosY+49+24 + (48*j),52+7+48+(48*(i+1)), panelLayerPosY+49+48+ (48*(j+1)))){
+							toolSize = sizeMacro[(j*4)+i];
+							refreshSizePanel();
+							repaint();
+						}
+						/*int tmpToolSize = Math.min(25, Math.max(1, (int)(tmpSize)));
+						g2d.fillOval(7+24+ (48*i) - (tmpToolSize/2), 49+24 + (48*j) - (tmpToolSize/2), tmpToolSize, tmpToolSize);
+						g2d.setFont(DIN.deriveFont(10f));
+						g2d.drawString(tmpSize+"", 7+24 + (48*i) - (g2d.getFontMetrics().stringWidth(tmpSize+"")/2), 4+92+ (48*j));*/
+					}
+				}
 			}
 			selectTool = -2;
 		}
@@ -702,60 +737,69 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		}
 		//g.drawLine(panelLayerPosX-7, tmp, panelLayerPosX+panelLayerSizeX, tmp)
 		
-		for(int i=0; i<5; i++){
-			int tmpX = panelLayerPosX - 7;
-			int tmpY = panelLayerPosY + panelButtonPosY;
-			if(mouseCheck(tmpX+(i*36), tmpY, tmpX+((i+1)*36)-1, tmpY+36)){
-				//System.out.println(i);
-				switch(i){
-					case 0:
-						layerList.get(index).hidden = !layerList.get(index).hidden;
-						System.out.println(layerList.get(index).hidden);
-						refreshBuffer(index);
-						break;
-					case 1:
-						
-						break;
-					case 2:
-						if(index > 0){
-							int tmpLayerID = index - 1;
-							Layer tmpLayer = layerList.get(index);
-							layerList.set(index, layerList.get(tmpLayerID));
-							layerList.set(tmpLayerID, tmpLayer);
-								
-							BufferedImage tmpLayerBuffer = layerBuffer.get(index);
-							layerBuffer.set(index, layerBuffer.get(tmpLayerID));
-							layerBuffer.set(tmpLayerID, tmpLayerBuffer);
+		if(onLayerPanel()){//System.out.println("asd");
+			for(int i=0; i<Math.min(layerList.size(), panelLayerMaxShow+2); i++){
+				if(mouseY > (7+panelSlotPos[i]) && mouseY < 7+panelSlotPos[i+1]){
+					index = panelSlotID[i+1];
+					//System.out.println((7+panelSlotPos[i]) + " < " + mouseY + " < " +(7+panelSlotPos[i+1]));
+				}
+			}
+		
+			for(int i=0; i<5; i++){
+				int tmpX = panelLayerPosX - 7;
+				int tmpY = panelLayerPosY + panelButtonPosY;
+				if(mouseCheck(tmpX+(i*36), tmpY, tmpX+((i+1)*36)-1, tmpY+36)){
+					//System.out.println(i);
+					switch(i){
+						case 0:
+							layerList.get(index).hidden = !layerList.get(index).hidden;
+							System.out.println(layerList.get(index).hidden);
+							refreshBuffer(index);
+							break;
+						case 1:
 							
-							index = tmpLayerID;
-						}
-						break;
-					case 3:
-						int tmpLayerID = layerList.size()-1;
-						if(index < tmpLayerID){
-							tmpLayerID = index + 1;
-							Layer tmpLayer = layerList.get(index);
-							layerList.set(index, layerList.get(tmpLayerID));
-							layerList.set(tmpLayerID, tmpLayer);
+							break;
+						case 2:
+							if(index > 0){
+								int tmpLayerID = index - 1;
+								Layer tmpLayer = layerList.get(index);
+								layerList.set(index, layerList.get(tmpLayerID));
+								layerList.set(tmpLayerID, tmpLayer);
+									
+								BufferedImage tmpLayerBuffer = layerBuffer.get(index);
+								layerBuffer.set(index, layerBuffer.get(tmpLayerID));
+								layerBuffer.set(tmpLayerID, tmpLayerBuffer);
 								
-							BufferedImage tmpLayerBuffer = layerBuffer.get(index);
-							layerBuffer.set(index, layerBuffer.get(tmpLayerID));
-							layerBuffer.set(tmpLayerID, tmpLayerBuffer);
-							
-							index = tmpLayerID;
-						}
-						break;
-						
-						
-					case 4:
-						if(layerList.size() > 1){
-							layerList.remove(index);
-							layerBuffer.remove(index);
-							if(index > 0){ 
-								index = index-1;
+								index = tmpLayerID;
 							}
-						}
-						break;
+							break;
+						case 3:
+							int tmpLayerID = layerList.size()-1;
+							if(index < tmpLayerID){
+								tmpLayerID = index + 1;
+								Layer tmpLayer = layerList.get(index);
+								layerList.set(index, layerList.get(tmpLayerID));
+								layerList.set(tmpLayerID, tmpLayer);
+									
+								BufferedImage tmpLayerBuffer = layerBuffer.get(index);
+								layerBuffer.set(index, layerBuffer.get(tmpLayerID));
+								layerBuffer.set(tmpLayerID, tmpLayerBuffer);
+								
+								index = tmpLayerID;
+							}
+							break;
+							
+							
+						case 4:
+							if(layerList.size() > 1){
+								layerList.remove(index);
+								layerBuffer.remove(index);
+								if(index > 0){ 
+									index = index-1;
+								}
+							}
+							break;
+					}
 				}
 			}
 		}
@@ -827,6 +871,8 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			for(int i=0; i<layerList.size(); i++){
 				refreshBuffer(index);
 			}
+			//refreshPanelLayer();
+			//repaint();
 			pageShift = false;
 		}
 	}
