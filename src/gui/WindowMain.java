@@ -636,17 +636,23 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		System.out.println("keyTyped: "+e);
+		//System.out.println("keyTyped: "+e);
 	}
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		System.out.println("keyPressed: "+e);
+		//System.out.println("keyPressed: "+e);
+		if(e.getKeyCode() == 16){
+			keyShift = true;
+		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		System.out.println("keyReleased: "+e);
+		//System.out.println("keyReleased: "+e);
+		if(e.getKeyCode() == 16){
+			keyShift = false;
+		}
 	}
 
 	@Override
@@ -1041,9 +1047,9 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		System.out.println(e.getWheelRotation());
+		//System.out.println(e.getWheelRotation());
 		panelLayerScroll -= e.getWheelRotation() * 16;
-		System.out.println(layerList.size()-panelLayerMaxShow);
+		//System.out.println(layerList.size()-panelLayerMaxShow);
 		panelLayerScroll = Math.max(Math.min(panelLayerScroll, panelLayerSizeY * Math.max(layerList.size()-panelLayerMaxShow, 0)), 0);
 		refreshPanelLayer();
 		repaint();

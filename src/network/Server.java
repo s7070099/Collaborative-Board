@@ -16,78 +16,41 @@ public class Server {
     ServerSocket myServerSocket;
     boolean ServerOn = true;
  
- 
-    public Server() 
+    public Server(int serverPort) 
     { 
-        try
-        { 
-            myServerSocket = new ServerSocket(11111); 
-        } 
-        catch(IOException ioe) 
-        { 
-            System.out.println("Could not create server socket on port 11111. Quitting."); 
+        try { 
+            myServerSocket = new ServerSocket(serverPort); 
+        } catch(IOException ioe) { 
+            System.out.println("Could not create server socket on port "+serverPort+". Quitting."); 
             System.exit(-1); 
         } 
  
         Calendar now = Calendar.getInstance();
         SimpleDateFormat formatter = new SimpleDateFormat("E yyyy.MM.dd 'at' hh:mm:ss a zzz");
         System.out.println("It is now : " + formatter.format(now.getTime()));
- 
- 
- 
- 
-        // Successfully created Server Socket. Now wait for connections. 
-        while(ServerOn) 
-        {                        
-            try
-            { 
-                // Accept incoming connections. 
+
+        while(ServerOn) {                        
+            try { 
                 Socket clientSocket = myServerSocket.accept(); 
- 
-                // accept() will block until a client connects to the server. 
-                // If execution reaches this point, then it means that a client 
-                // socket has been accepted. 
- 
-                // For each client, we will start a service thread to 
-                // service the client requests. This is to demonstrate a 
-                // Multi-Threaded server. Starting a thread also lets our 
-                // MultiThreadedSocketServer accept multiple connections simultaneously. 
- 
-                // Start a Service thread 
- 
                 ClientServiceThread cliThread = new ClientServiceThread(clientSocket);
                 cliThread.start(); 
  
-            } 
-            catch(IOException ioe) 
-            { 
+            } catch(IOException ioe) { 
                 System.out.println("Exception encountered on accept. Ignoring. Stack Trace :"); 
                 ioe.printStackTrace(); 
             } 
  
         }
  
-        try
-        { 
+        try { 
             myServerSocket.close(); 
             System.out.println("Server Stopped"); 
-        } 
-        catch(Exception ioe) 
-        { 
+        } catch(Exception ioe) { 
             System.out.println("Problem stopping server socket"); 
             System.exit(-1); 
         } 
- 
- 
- 
     } 
- 
-    /*public static void main (String[] args) 
-    { 
-        new MultiThreadedSocketServer();        
-    } */
- 
- 
+
     class ClientServiceThread extends Thread 
     { 
         Socket myClientSocket;
@@ -105,10 +68,7 @@ public class Server {
         } 
  
         public void run() 
-        {            
-            // Obtain the input stream and the output stream for the socket 
-            // A good practice is to encapsulate them with a BufferedReader 
-            // and a PrintWriter as shown below. 
+        { 
             BufferedReader in = null; 
             PrintWriter out = null; 
  
@@ -120,18 +80,13 @@ public class Server {
                 in = new BufferedReader(new InputStreamReader(myClientSocket.getInputStream())); 
                 out = new PrintWriter(new OutputStreamWriter(myClientSocket.getOutputStream())); 
  
-                // At this point, we can read for input and reply with appropriate output. 
- 
-                // Run in a loop until m_bRunThread is set to false 
                 while(m_bRunThread) 
                 {                    
-                    // read incoming stream 
                     String clientCommand = in.readLine(); 
                     System.out.println("Client Says :" + clientCommand);
  
                     if(!ServerOn) 
                     { 
-                        // Special command. Quit this thread 
                         System.out.print("Server has already stopped"); 
                         out.println("Server has already stopped"); 
                         out.flush(); 
@@ -140,18 +95,15 @@ public class Server {
                     } 
  
                     if(clientCommand.equalsIgnoreCase("quit")) { 
-                        // Special command. Quit this thread 
                         m_bRunThread = false;   
                         System.out.print("Stopping client thread for client : "); 
                     } else if(clientCommand.equalsIgnoreCase("end")) { 
-                        // Special command. Quit this thread and Stop the Server
                         m_bRunThread = false;   
                         System.out.print("Stopping client thread for client : "); 
                         ServerOn = false;
                     } else {
-                            // Process it 
-                            out.println("Server Says : " + clientCommand); 
-                            out.flush(); 
+                        out.println("Server Says : " + clientCommand); 
+                        out.flush(); 
                     }
                 } 
             } 
@@ -161,7 +113,6 @@ public class Server {
             } 
             finally
             { 
-                // Clean up 
                 try
                 {                    
                     in.close(); 
@@ -175,7 +126,5 @@ public class Server {
                 } 
             } 
         } 
- 
- 
     } 
 }

@@ -41,6 +41,10 @@ public class Window extends JFrame implements KeyListener {
 		
 	}
 	
+	public void goToServerConsole(){
+		
+	}
+	
 	public Window(String Caption, int screenWidth, int screenHeight) {
 		this.screenWidth = screenWidth;
 		this.screenHeight = screenHeight;
