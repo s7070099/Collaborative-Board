@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 public class Line {
 
+	public int id;
 	public float size;
 	public Color color;
 	public ArrayList<Point> data;

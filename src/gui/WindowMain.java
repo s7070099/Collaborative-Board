@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
@@ -37,6 +38,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import core.*;
+import network.Network;
 
 public class WindowMain extends JPanel implements ComponentListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
 	
@@ -120,6 +122,9 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	boolean canDrag = false;
 	int sizeDragValue = 0;
 	float sizeMacro[] = {0.7f, 1, 1.5f, 2, 2.5f, 3, 4, 5, 6, 7, 8, 10, 12, 15, 17, 20, 25, 30, 40, 50, 60, 70, 80, 1000};
+	
+	public int lineIndex = -1;
+	public ArrayList<Integer> linePreIndex = new ArrayList<Integer>();
 	
 	Font DIN;
 	
@@ -225,7 +230,16 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		g2d = null;
 		System.gc();
         
-        addLayer("Default", core.CollaborativeBoard.Nickname);
+		if(Network.layerList == null){
+			addLayer("Default", core.CollaborativeBoard.Nickname);
+		}else{
+			for(Layer i:Network.layerList){
+				int index2 = addLayer(i.name, i.author);
+				layerList.get(index2).data = Network.layerList.get(index2).data;
+				refreshBuffer(index2);
+			}
+		}
+		
         /*addLayer("Layer2", core.CollaborativeBoard.Nickname);
         addLayer("Layer3", core.CollaborativeBoard.Nickname);
         addLayer("Layer4", core.CollaborativeBoard.Nickname);*/
@@ -235,10 +249,13 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
         /*JButton button = new JButton("Click Me");
         button.setBounds(5, 5, 50, 30);
         add(button);*/
-        layerList.get(0).user.add("FakeUser1");
+        /*layerList.get(0).user.add("FakeUser1");
         layerList.get(0).user.add("FakeUser2");
-        layerList.get(0).user.add("FakeUser3");
+        layerList.get(0).user.add("FakeUser3");*/
         
+        refreshPanelLayer();
+        revalidate();
+        repaint();
         //updateAll();
 	}
 	
@@ -487,7 +504,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		int offsetY = (int)cameraY;
 		int sizeX = (int)1920;
 		int sizeY = (int)1080;
-		for(int i=0; i<layerBuffer.size(); i++){
+		for(int i=layerBuffer.size()-1; i>=0; i--){
 			if(layerList.get(i).hidden){
 				g.drawImage(nullBuffer, 0, 0, null);
 			}else{
@@ -558,7 +575,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		g.setFont(DIN.deriveFont(10f));
 		g.drawString(toolSize+"", 24 - (g.getFontMetrics().stringWidth(toolSize+"")/2), panelToolPosition + 92);
 		g.setFont(DIN.deriveFont(22f));
-		g.drawString("<    " + paperName + " / " + layerList.get(index).name, 12, 20);
+		g.drawString("<    " + Network.paperName + " / " + layerList.get(index).name, 12, 20);
 		
 		g = null;
 		System.gc();
@@ -669,8 +686,9 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		mousePressRY = mousePressY + cameraY;
 		
 		if(mouseCheck(0, 0, 48, 32)){
-			CollaborativeBoard.window.goToList();
-			System.out.println("Exit");
+			Network.client.out.println("exitpaper");
+			Network.client.out.flush();
+			//System.out.println("Exit");
 			return;
 		}
 		
@@ -712,6 +730,18 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 					canPickMajor = true;
 					colorMajorPick();
 				}
+				
+				int offsetCPX = 52+15;
+		        int offsetCPY = panelLayerPosY+206+22-7;
+		        int offsetCPSX = 22;
+		        int offsetCPSY = 22;
+		        for(int j=0; j<6; j++){
+		        	for(int i=0; i<8; i++){
+		        		if(mouseCheck(offsetCPX + (i*offsetCPSX), offsetCPY + (j*offsetCPSY), offsetCPX + ((i+1)*offsetCPSX) - 2, offsetCPY + ((j+1)*offsetCPSY) - 2)){
+		        			toolColor = colorMacro[i+(j*8)];
+		        		}
+		        	}
+		        }
 			}
 			if(subTool == 2){
 				if(mouseCheck(52+7, panelLayerPosY+16+7, 52+7+192, panelLayerPosY+16+7+48)){
@@ -811,13 +841,19 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 		}
 		
 		//System.out.println(selectTool + ", penrecord " + penRecord);
-		if(selectTool == -1 && mouseLeft(e)){
+		if(selectTool == -1 && mouseLeft(e) /*&& lineIndex == -1*/){
 			//System.out.println("Start with " + selectTool);
 			pointList = null;
 			System.gc();
 			pointList = new ArrayList<Point>();
 			penRecord = true;
 			if(ifDrawTool()){
+				Network.client.out.println("al");
+				Network.client.out.println(toolSize);
+				Network.client.out.println(toolColor.getRed());
+				Network.client.out.println(toolColor.getGreen());
+				Network.client.out.println(toolColor.getBlue());
+				Network.client.out.flush();
 				//System.out.println("Draw Tool Confirm >> " + tool);
 				//System.out.println("Started " + penRecord);
 				
@@ -860,9 +896,20 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 					tmpLine.add(new Point(i.x - cameraX, i.y - cameraY));
 				}
 				
-				Line line = new Line(tmpLine, toolSize, toolColor);
-				layerList.get(index).data.add(line);
+				if(tool >= 3 && tool <= 5){
+					for(int i=0; i<tmpLine.size(); i++){
+						Network.client.out.println("ap");
+						Network.client.out.println(tmpLine.get(i).x);
+						Network.client.out.println(tmpLine.get(i).y);
+						Network.client.out.flush();
+					}
+				}
 				
+				Line line = new Line(tmpLine, toolSize, toolColor);
+				//if(lineIndex == -1){
+					line.id = lineIndex;
+				//}
+				layerList.get(index).data.add(line);
 				applyLine(index, line);
 				//System.out.println("Ended " + penRecord + "(Buffer "+ layerBuffer.size() +", Use "+ index +")");
 				pointList = null;
@@ -874,11 +921,11 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			penRecord = false;
 		}
 		if(pageShift){
-			for(int i=0; i<layerList.size(); i++){
+			for(int i=layerBuffer.size()-1; i>=0; i--){
 				refreshBuffer(index);
 			}
-			//refreshPanelLayer();
-			//repaint();
+			refreshPanelLayer();
+			repaint();
 			pageShift = false;
 		}
 	}
@@ -936,6 +983,10 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 			switch(tool){
 				case 2: 
 					pointList.add(new Point(mouseX, mouseY));
+					Network.client.out.println("ap");
+					Network.client.out.println(mouseX);
+					Network.client.out.println(mouseY);
+					Network.client.out.flush();
 					break;
 				case 3:
 					pointList.get(1).x = mouseX;
@@ -1048,7 +1099,7 @@ public class WindowMain extends JPanel implements ComponentListener, KeyListener
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		//System.out.println(e.getWheelRotation());
-		panelLayerScroll -= e.getWheelRotation() * 16;
+		panelLayerScroll += -e.getWheelRotation() * 32;
 		//System.out.println(layerList.size()-panelLayerMaxShow);
 		panelLayerScroll = Math.max(Math.min(panelLayerScroll, panelLayerSizeY * Math.max(layerList.size()-panelLayerMaxShow, 0)), 0);
 		refreshPanelLayer();

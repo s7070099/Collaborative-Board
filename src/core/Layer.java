@@ -10,6 +10,7 @@ public class Layer {
 	public ArrayList<String> user;
 	public ArrayList<Line> data;
 	public int onlineUser;
+	public int lineIndex = 0;
 	
 	public Layer(String name, String author){
 		this.name = name;

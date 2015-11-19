@@ -25,6 +25,7 @@ public class Window extends JFrame implements KeyListener {
 	public static WindowLogin windowLogin;
 	public static WindowMain windowMain;
 	public static WindowServerConsole windowServerConsole;
+	public static WindowSelectPaper windowSelectPaper;
 	
 	public void goToList(){
 		/*remove(windowMain);
@@ -35,15 +36,52 @@ public class Window extends JFrame implements KeyListener {
 	}
 	
 	public void goToPaper(){
-		
+		if(windowSelectPaper != null){
+			windowSelectPaper.removeAll();
+			windowSelectPaper.revalidate();
+			remove(windowSelectPaper);
+			windowSelectPaper = null;
+			
+		}
+		System.gc();
+		windowMain = new WindowMain();
+		add(windowMain);
 	}
 	
 	public void goToSelectPaper(){
+		if(windowMain != null){
+			windowMain.removeAll();
+			windowMain.revalidate();
+			remove(windowMain);
+			windowMain = null;
+		}
 		
+		if(windowLogin != null){
+			windowLogin.removeAll();
+			windowLogin.revalidate();
+			remove(windowLogin);
+			windowLogin = null;
+		}
+		
+		System.gc();
+		windowSelectPaper = new WindowSelectPaper();
+		add(windowSelectPaper);
+		revalidate();
+		repaint();
 	}
 	
 	public void goToLogin(){
-	
+		if(windowSelectPaper != null){
+			windowSelectPaper.removeAll();
+			windowSelectPaper.revalidate();
+			remove(windowSelectPaper);
+			windowSelectPaper = null;
+			System.gc();
+		}
+		windowLogin = new WindowLogin();
+		add(windowLogin);
+		revalidate();
+		repaint();
 	}
 	
 	public void goToLogin2(){
@@ -90,6 +128,9 @@ public class Window extends JFrame implements KeyListener {
 		
 		
 		//add(windowServerConsole);
+		
+		//windowSelectPaper = new WindowSelectPaper();
+		//add(windowSelectPaper);
 		
 		windowLogin = new WindowLogin();
 		add(windowLogin);

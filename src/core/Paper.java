@@ -6,15 +6,19 @@ public class Paper {
 	
 	public String name;
 	public String author;
+	public String password;
 	public ArrayList<String> user;
 	public ArrayList<Layer> data;
-	public int onlineUser;
+	public ArrayList<String> onlineUser;
 	
-	public Paper(String name, String author){
+	public Paper(String name, String author, String password){
 		this.name = name;
 		this.author = author;
+		this.password = password;
 		this.data = new ArrayList<Layer>();
+		this.data.add(new Layer("Default", ""));
 		this.user = new ArrayList<String>();
+		this.onlineUser = new ArrayList<String>();
 	}
 	
 	public void addUser(String user){

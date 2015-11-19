@@ -37,7 +37,7 @@ class Console extends Thread {
 				
 				String paper_name = bufReader.readLine(); //1.Paper name
 				String paper_author = bufReader.readLine();//2.Author name
-				Paper paper = new Paper(paper_name,paper_author);
+				Paper paper = new Paper(paper_name,paper_author,"");
 				int user_qty = Integer.parseInt(bufReader.readLine());
 				for(int i=0;i<user_qty;i++){
 					paper.addUser(bufReader.readLine());
@@ -84,7 +84,7 @@ class Console extends Thread {
 			   
 			   String filename = input.next();
 			   
-			   Paper paper = new Paper("Test Paper", "Admin");
+			   Paper paper = new Paper("Test Paper", "Admin", "");
 			   paper.data = gui.Window.windowMain.layerList;
 			   paper.user.add("Mark");
 			   paper.user.add("Jimmy");

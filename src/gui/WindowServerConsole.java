@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.text.DefaultCaret;
 
 import core.CollaborativeBoard;
 import network.Network;
@@ -46,6 +47,8 @@ public class WindowServerConsole extends JPanel {
 		output = new JTextArea();
 		output.setBounds(0, 0, screenWidth, screenHeight-70);
 		panel.add(output);
+		DefaultCaret caret = (DefaultCaret)output.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
 		scrollPane = new JScrollPane(output);
 		scrollPane.setBounds(0, 0, screenWidth-15, screenHeight-70);
@@ -62,7 +65,7 @@ public class WindowServerConsole extends JPanel {
 		stopButton.addActionListener(new ActionListener(){
 			 public void actionPerformed(ActionEvent e)
 			 {
-				 Network.server.ServerOn = false;
+				 Network.server.stop();
 				 CollaborativeBoard.window.goToLogin2();
 			 }
 		});

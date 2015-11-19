@@ -6,8 +6,10 @@ import java.awt.event.ActionListener;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -35,18 +37,26 @@ public class WindowLogin extends JPanel{
 	int screenHeight = 720;
 	String copyright = "Collaborative Workspace by Group 5";
 	BufferedImage logo;
-	JPanel panel;
-	JPanel panelConnecting;
-	JPanel panelServerConfig;
+	public JPanel panel;
+	public JPanel panelConnecting;
+	public JPanel panelServerConfig;
 	Font DIN;
 	
+	String ssid = "";
 	boolean autologin = false;
 	boolean remember_svip = true;
 	
-	int svPort = 9999;
-	int svPaper = 32;
-	int svUser = 12;
-	String svDirectory = "save/default";
+	String svDefaultCaption = "Welcome to Collaborative Workspace !";
+	int svDefaultPort = 9999;
+	int svDefaultPaper = 32;
+	int svDefaultUser = 12;
+	String svDefaultDirectory = "save/default";
+	
+	String svCaption = "";
+	int svPort = 0;
+	int svPaper = 0;
+	int svUser = 0;
+	String svDirectory = "";
 	boolean remember_svconfig = true;
 	
 	Thread threadA;
@@ -67,11 +77,11 @@ public class WindowLogin extends JPanel{
 			if(file.exists()){
 				FileReader fReader = new FileReader(file);
 				BufferedReader bufReader = new BufferedReader(fReader);
-	
+
 				oldName = bufReader.readLine();
 				oldServerIP = bufReader.readLine();
-				remember_svip = bufReader.readLine().equals("1");
-				autologin = bufReader.readLine().equals("1");
+				remember_svip = bufReader.readLine().equals("true");
+				autologin = bufReader.readLine().equals("true");
 				
 				if(remember_svip == false){
 					oldName = "";
@@ -85,16 +95,32 @@ public class WindowLogin extends JPanel{
 		}
 		
 		try {
+			File file = new File("user.key");
+			if(file.exists()){
+				FileReader fReader = new FileReader(file);
+				BufferedReader bufReader = new BufferedReader(fReader);
+				ssid = bufReader.readLine();
+				bufReader.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			ssid = "";
+		}
+		
+		try {
 			File file = new File("server.config");
 			if(file.exists()){
 				FileReader fReader = new FileReader(file);
 				BufferedReader bufReader = new BufferedReader(fReader);
 				
-				svPort = Integer.parseInt(bufReader.readLine());
-				svPaper = Integer.parseInt(bufReader.readLine());
-				svUser = Integer.parseInt(bufReader.readLine());
-				svDirectory = bufReader.readLine();
-				remember_svconfig = bufReader.readLine().equals("1");
+				remember_svconfig = bufReader.readLine().equals("true");
+				if(remember_svconfig == true){
+					svCaption = bufReader.readLine();
+					svPort = Integer.parseInt(bufReader.readLine());
+					svPaper = Integer.parseInt(bufReader.readLine());
+					svUser = Integer.parseInt(bufReader.readLine());
+					svDirectory = bufReader.readLine();
+				}
 				
 				bufReader.close();
 			}
@@ -146,12 +172,20 @@ public class WindowLogin extends JPanel{
         passInput.setText(oldServerIP);
         panel.add(passInput);
         
+        final PlaceholderTextField captionInput = new PlaceholderTextField("");
+        captionInput.setBounds(0, 100, 200, 25);
+        captionInput.setPlaceholder("Server Caption");
+        captionInput.setFont(new Font("", getFont().getStyle(), 16));
+        captionInput.setDisabledTextColor(Color.LIGHT_GRAY);
+        captionInput.setText(svCaption+"");
+        panelServerConfig.add(captionInput);
+        
         final PlaceholderTextField portInput = new PlaceholderTextField("");
         portInput.setBounds(0, 125, 200, 25);
         portInput.setPlaceholder("Server Port (Default: 9999)");
         portInput.setFont(new Font("", getFont().getStyle(), 16));
         portInput.setDisabledTextColor(Color.LIGHT_GRAY);
-        portInput.setText(svPort+"");
+        if(svPort != 0) portInput.setText(svPort+"");
         panelServerConfig.add(portInput);
         
         final PlaceholderTextField maxPaperInput = new PlaceholderTextField("");
@@ -159,7 +193,7 @@ public class WindowLogin extends JPanel{
         maxPaperInput.setPlaceholder("Maximum Paper");
         maxPaperInput.setFont(new Font("", getFont().getStyle(), 16));
         maxPaperInput.setDisabledTextColor(Color.LIGHT_GRAY);
-        maxPaperInput.setText(svPaper+"");
+        if(svPaper != 0) maxPaperInput.setText(svPaper+"");
         panelServerConfig.add(maxPaperInput);
         
         final PlaceholderTextField maxUserInput = new PlaceholderTextField("");
@@ -167,7 +201,7 @@ public class WindowLogin extends JPanel{
         maxUserInput.setPlaceholder("Maximum User");
         maxUserInput.setFont(new Font("", getFont().getStyle(), 16));
         maxUserInput.setDisabledTextColor(Color.LIGHT_GRAY);
-        maxUserInput.setText(svUser+"");
+        if(svUser != 0) maxUserInput.setText(svUser+"");
         panelServerConfig.add(maxUserInput);
         
         final PlaceholderTextField fileInput = new PlaceholderTextField("");
@@ -200,7 +234,7 @@ public class WindowLogin extends JPanel{
 		});
         
         Checkbox option3 = new Checkbox("Remember server settings.");
-		option3.setState(true);
+		option3.setState(remember_svconfig);
 		option3.setBounds(0, 230, 260, 20);
 		option3.setBackground(Color.WHITE);
 		option3.setState(remember_svconfig);
@@ -233,14 +267,24 @@ public class WindowLogin extends JPanel{
 					 svPaper = Integer.parseInt(maxPaperInput.getText());
 				 if(maxUserInput.getText().length() != 0) 
 					 svUser = Integer.parseInt(maxUserInput.getText());
-				 String svDirectory = fileInput.getText();
+				 if(fileInput.getText().length() != 0){
+					 svDirectory = fileInput.getText();
+				 }else{
+					 svDirectory = svDefaultDirectory;
+				 }
+				 if(captionInput.getText().length() != 0){
+					 svCaption = captionInput.getText();
+				 }else{
+					 svCaption = svDefaultCaption;
+				 }
+				 remember_svconfig = option3.getState();
 
 				 int errorcode = 0;
 				 String info = null;
 				 
-				 if(svPort <= 0) svPort = 9999;
-				 if(svPaper <= 0) svPaper = 32;
-				 if(svUser <= 0) svUser = 12;
+				 if(svPort <= 0) svPort = svDefaultPort;
+				 if(svPaper <= 0) svPaper = svDefaultPaper;
+				 if(svUser <= 0) svUser = svDefaultUser;
 				 
 				 File tmpFile = new File(svDirectory);
 				 if(!tmpFile.exists()){
@@ -250,7 +294,28 @@ public class WindowLogin extends JPanel{
 						info = "cannot create save directory !";
 					}
 				 }
+
+				 try {
+         			File file = new File("server.config");
+     				FileWriter fWriter = new FileWriter(file);
+     				BufferedWriter buffer = new BufferedWriter(fWriter);
+     				buffer.write(remember_svconfig+"");
+     				buffer.newLine();
+     				buffer.write(svCaption);
+     				buffer.newLine();
+     				buffer.write(svPort+"");
+     				buffer.newLine();
+     				buffer.write(svPaper+"");
+     				buffer.newLine();
+     				buffer.write(svUser+"");
+     				buffer.newLine();
+     				buffer.write(svDirectory+"");
+     				buffer.close();
+				 } catch (IOException e1) {
+					e1.printStackTrace();
+				 }
 				 
+				 Network.serverCaption = svCaption;
 				 Network.serverPort = svPort;
 				 Network.serverPaper = svPaper;
 				 Network.serverUser = svUser;
@@ -260,14 +325,14 @@ public class WindowLogin extends JPanel{
 					 Network.mode = 2;
 					 CollaborativeBoard.window.goToServerConsole();
 					 
-					 threadA = new Thread(new Runnable(){
+					 Network.serverThread = new Thread(new Runnable(){
 				            public void run(){
 				            	panel.setVisible(true);
 				            	panelConnecting.setVisible(false);
 				            	Network.server.start();
 				            }
 				     }, "Server");
-					 threadA.start();
+					 Network.serverThread.start();
 				 }else{
 					 JOptionPane.showMessageDialog (null, info, "ERROR", JOptionPane.ERROR_MESSAGE);
 				 }
@@ -314,7 +379,7 @@ public class WindowLogin extends JPanel{
 				 if(errorcode == 0){
 					 Network.mode = 1;
 					 
-					 threadA = new Thread(new Runnable(){
+					 Network.clientThread = new Thread(new Runnable(){
 				            public void run(){
 				            	String serverIPArray[] = serverip.split(":"); 
 				        		String serverip = serverIPArray[0];
@@ -322,7 +387,12 @@ public class WindowLogin extends JPanel{
 				        		if(serverPort == 0) serverPort = 9999;
 				        		
 				        		label2.setText(serverip+":"+serverPort);
-				            	
+				        		
+				        		Network.serverIP = serverip;
+				        		Network.serverPort = serverPort;
+				        		Network.nickname = name;
+				        		Network.ssid = ssid;
+				        		
 				            	if(Network.client.connect(name, serverip, serverPort)){
 				            		CollaborativeBoard.window.goToList();
 				            	}else{
@@ -332,7 +402,7 @@ public class WindowLogin extends JPanel{
 				            	panelConnecting.setVisible(false);
 				            }
 				     }, "Client");
-					 threadA.start();
+					 Network.clientThread.start();
 					 
 					 panel.setVisible(false);
 					 panelConnecting.setVisible(true);
@@ -345,22 +415,26 @@ public class WindowLogin extends JPanel{
 		cancelButton.addActionListener(new ActionListener(){
 			 public void actionPerformed(ActionEvent e)
 			 {
-				 threadA.stop();
-				 panel.setVisible(true);
-				 panelConnecting.setVisible(false);
+				 if(Network.client.disconnnect()){
+					 Network.clientThread.stop();
+					 panel.setVisible(true);
+					 panelConnecting.setVisible(false);
+				 }else{
+					 JOptionPane.showMessageDialog (null, "failed to disconnect. please restart program.", "ERROR", JOptionPane.ERROR_MESSAGE);
+				 }
 			 }
 		});
 
 		
 		Checkbox option1 = new Checkbox("Remember nickname and server IP");
 		panel.add(option1);
-		option1.setState(true);
+		option1.setState(remember_svip);
 		option1.setBounds(0,230,260,20);
 		option1.setBackground(Color.WHITE);
 		
 		Checkbox option2 = new Checkbox("Connect automatically");
 		panel.add(option2);
-		option1.setState(true);
+		option2.setState(autologin);
 		option2.setBounds(0,250,200,20);
 		option2.setBackground(Color.WHITE);
 	
